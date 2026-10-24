@@ -100,6 +100,8 @@ kbd { font-family: var(--display); font-weight: 800; font-size: 14px; padding: 1
 .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--c-deep), inset 0 2px 0 rgba(255, 255, 255, 0.45); }
 footer { text-align: center; font-weight: 700; color: #1b2c55; font-size: 15px; padding-top: 4px; }
 footer a { color: #13306e; white-space: nowrap; }
+footer p { margin: 0 0 6px; }
+footer .credits { font-weight: 600; font-size: 14px; }
 </style>
 </head>
 <body>
@@ -173,7 +175,7 @@ footer a { color: #13306e; white-space: nowrap; }
     <section class="panel" aria-labelledby="saving">
       <h2 id="saving">Saving your progress</h2>
       <p>Your progress saves by itself on your device: your stars, the levels you have reached, your balls and your settings.</p>
-      <p>There is no account and no online backup, so progress does not move from one device to another. Deleting the app deletes your progress.</p>
+      <p>There is no account, so progress is not synced between devices, but it can come back from your own iPhone backup. Deleting the app deletes your progress.</p>
       <p class="muted">In the web version, progress is kept by your browser for this website. Clearing website data or using a private window removes it, and Safari may clear it if you have not opened the game for a while. Adding the game to your Home Screen helps keep it.</p>
     </section>
 
@@ -196,7 +198,10 @@ footer a { color: #13306e; white-space: nowrap; }
     </section>
   </main>
 
-  <footer>&copy; 2026 Ozhan Duyan &middot; <a href="privacy.html">Privacy Policy</a> &middot; <a href="./">Selena Roller</a></footer>
+  <footer>
+    <p>&copy; 2026 Ozhan Duyan &middot; <a href="privacy.html">Privacy Policy</a> &middot; <a href="./">Selena Roller</a></p>
+    <p class="credits">Uses three.js (MIT licence) and the Rubik font (SIL Open Font License). <a href="THIRD-PARTY-NOTICES.txt">Licence notices</a></p>
+  </footer>
 </div>
 </body>
 </html>

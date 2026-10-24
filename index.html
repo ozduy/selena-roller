@@ -134,6 +134,21 @@ h2 {
   background: linear-gradient(180deg, #8fe3ff, #2d9bff 60%, #1f6fe0);
 }
 .bar .flag { position: absolute; right: -6px; top: 50%; width: 22px; height: 22px; margin-top: -15px; filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.35)); }
+/* Narrower phones: slightly tighter spacing and text in the top bar, so the world name still fits next to a
+   two-digit level and a three-digit star count (otherwise it is cut short, for example "Cloud King..."). */
+@media (max-width: 429px) {
+  .hud { gap: 8px; }
+  .lvlbox { padding: 6px 10px 9px; }
+  .lvltop { gap: 6px; }
+  .lvllabel { font-size: 15px; letter-spacing: 0.01em; }
+  .lvlworld { font-size: 13px; }
+  .hud .pill { gap: 4px; padding: 6px 11px 6px 6px; font-size: 18px; }
+  .hud .pill svg { width: 26px; height: 26px; }
+}
+@media (max-width: 380px) {
+  .lvllabel { font-size: 14px; }
+  .lvlworld { font-size: 12px; }
+}
 
 .hud2 {
   position: absolute; left: 0; right: 0; box-sizing: border-box;
@@ -253,7 +268,11 @@ h2 {
   background: linear-gradient(180deg, var(--gold-top), var(--gold)); color: #3b2500; border-color: transparent;
   box-shadow: 0 4px 0 var(--gold-deep), inset 0 2px 0 rgba(255, 255, 255, 0.55);
 }
-.agehint { margin: -4px 0 0; font-size: 15px; font-weight: 700; color: var(--muted); text-align: center; }
+.pacehint { margin: -4px 0 0; font-size: 15px; font-weight: 700; color: var(--muted); text-align: center; }
+.menulinks { margin: -8px 0 -10px; display: flex; justify-content: center; align-items: center; font-size: 14px; font-weight: 700; color: var(--muted); }
+.menulinks a { color: inherit; text-decoration: none; padding: 7px 12px; border-radius: 12px; }
+.menulinks a:active { background: var(--chip); }
+.menulinks a:focus-visible { outline: 3px solid var(--gold); outline-offset: -2px; }
 .row { display: flex; gap: 10px; align-items: stretch; }
 .chip {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex: 1 1 0; min-width: 0;
@@ -415,12 +434,14 @@ h2 {
         <button data-s="1" aria-pressed="false"><svg><use href="#i-chev2"/></svg><span>Normal</span></button>
         <button data-s="2" aria-pressed="false"><svg><use href="#i-chev3"/></svg><span>Zoom</span></button>
       </div>
-      <p class="agehint" id="ageHint">Best for ages 3 to 4</p>
+      <p class="pacehint" id="paceHint">Relaxed, with extra help</p>
       <div class="row">
         <button class="chip" id="shopBtn"><canvas class="ballicon" id="ballIcon" width="64" height="64"></canvas><span>Balls</span></button>
         <button class="chip" id="soundBtn"><svg><use id="soundIcon" href="#i-sound"/></svg><span id="soundLabel">Sound on</span></button>
         <div class="pill"><svg><use href="#i-star"/></svg><span id="menuStars">0</span></div>
       </div>
+      <!-- Full addresses: the iPhone app opens these in Safari (a relative link would point inside the app). -->
+      <p class="menulinks"><a href="https://ozduy.github.io/selena-roller/support.html" target="_blank" rel="noopener">Help</a><span aria-hidden="true">&middot;</span><a href="https://ozduy.github.io/selena-roller/privacy.html" target="_blank" rel="noopener">Privacy</a></p>
     </div>
   </section>
 
@@ -481,7 +502,8 @@ h2 {
     };
   }
   const lin = hex => new THREE.Color(hex).convertSRGBToLinear();
-  const DEBUG = (() => { try { return /debug/i.test(String(window.location.href)); } catch (e) { return false; } })();
+  const IN_APP = location.protocol === 'selenaroller:';   // the iPhone app serves the game from selenaroller://localhost/
+  const DEBUG = !IN_APP && (() => { try { return /debug/i.test(String(window.location.href)); } catch (e) { return false; } })();
   let headless = false;   // true while the test bot runs a level without drawing
 
   // ---------- Saved progress (this device only) ----------
@@ -600,7 +622,9 @@ h2 {
   let renderer = null;
   try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance', stencil: false }); } catch (e) { renderer = null; }
   if (!renderer) {
-    $('menu').innerHTML = '<div class="panel center nogl"><h2>3D is switched off</h2><p>This browser could not start 3D graphics. Try opening the link in Chrome or Safari.</p></div>';
+    $('menu').innerHTML = IN_APP
+      ? '<div class="panel center nogl"><h2>3D could not start</h2><p>The 3D view could not start. Close Selena Roller fully and open it again.</p></div>'
+      : '<div class="panel center nogl"><h2>3D is switched off</h2><p>This browser could not start 3D graphics. Try opening the link in Chrome or Safari.</p></div>';
     return;
   }
   // Phones and tablets draw at up to 1.75x (about a quarter fewer pixels than 2x, so less heat); the governor below can lower it further.
@@ -3990,14 +4014,14 @@ h2 {
     ['hudStars', 'menuStars', 'shopStars'].forEach(id => { $(id).textContent = save.stars; });
     if (popIt) burst($('hudStarPill'), POP, 320);
   }
-  const AGE_TEXT = ['Best for ages 3 to 4', 'Best for ages 5 to 6', 'Best for ages 7 to 9'];
+  const PACE_TEXT = ['Relaxed, with extra help', 'Steady, the usual pace', 'Fast, for a challenge'];
   function drawBallIcon() { const c = $('ballIcon'), g = c.getContext('2d'); g.clearRect(0, 0, 64, 64); g.drawImage(thumb(save.skin, 144), 0, 0, 64, 64); }
   function refreshMenu() {
     if (!lvl) return;
     $('prevLvl').disabled = lvl.n <= 1;
     $('nextLvl').disabled = lvl.n >= save.best;
     document.querySelectorAll('#speedSeg button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.s === save.speed)));
-    $('ageHint').textContent = AGE_TEXT[save.speed];
+    $('paceHint').textContent = PACE_TEXT[save.speed];
     $('soundLabel').textContent = save.muted ? 'Sound off' : 'Sound on';
     $('soundIcon').setAttribute('href', save.muted ? '#i-mute' : '#i-sound');
     $('menuLvl').textContent = 'Level ' + lvl.n;
@@ -4176,7 +4200,8 @@ h2 {
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') input.keyL = false;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') input.keyR = false;
   });
-  window.addEventListener('blur', () => { input.keyL = input.keyR = false; endDrag(); });
+  // Leaving the window (another app or window in front) pauses a level that is under way.
+  window.addEventListener('blur', () => { input.keyL = input.keyR = false; endDrag(); if (!headless) pause(); });
 
   // The menu is on screen before start-up has finished (it waits a moment for the web font): a tap there finishes it first.
   $('playBtn').addEventListener('click', startPlay);
@@ -4238,6 +4263,9 @@ h2 {
     if (document.hidden) { pause(); saveNow(); stopLoop(); if (roll && actx) roll.g.gain.setTargetAtTime(0, actx.currentTime, 0.05); }
     else startLoop();
   });
+  // The iPhone app calls this when it stops being the active app (Notification Centre, Control Centre, Siri,
+  // a call). The page stays visible then, so visibilitychange does not fire and the level would roll on.
+  window.selenaPause = () => { if (!headless) pause(); };
   // Only unsaved progress is written on the way out, so closing an older tab never rolls back what a newer tab saved.
   window.addEventListener('pagehide', () => { saveNow(); });
   // Another tab saved: take in its progress (never lowering anything) while this tab is not in the middle of a level.
