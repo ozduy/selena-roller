@@ -1,5 +1,6 @@
 # Builds the Selena Roller iPhone app on a GitHub-hosted Mac.
-# - Every push that touches the app or the web game: a simulator build with no signing, plus a launch screenshot.
+# - Every push that touches the app or the web game: a simulator build with no signing, then a launch check
+#   with a screenshot (the build fails if the app does not keep running).
 # - Run it by hand (Actions > iOS app > Run workflow) with "upload" ticked: archive, sign with Apple's
 #   cloud-managed certificate and upload to App Store Connect / TestFlight. ios/README.md lists the secrets.
 name: iOS app
@@ -15,6 +16,7 @@ on:
       - "manifest.webmanifest"
       - "fonts/**"
       - "icon-*.png"
+      - "THIRD-PARTY-NOTICES.txt"
   workflow_dispatch:
     inputs:
       upload:
@@ -35,9 +37,10 @@ env:
   DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
   APP_NAME: SelenaRoller
   BUNDLE_ID: com.ozduy.selenaroller
-  HOMEBREW_NO_AUTO_UPDATE: "1"
-  HOMEBREW_NO_INSTALL_CLEANUP: "1"
-  HOMEBREW_NO_ENV_HINTS: "1"
+  # XcodeGen comes from its own GitHub release, checked against the SHA-256 that GitHub lists for xcodegen.zip,
+  # so the upload job (which handles the signing key) never runs an unpinned installer.
+  XCODEGEN_VERSION: "2.46.0"
+  XCODEGEN_SHA256: 4d9e34b62172d645eed6457cac13fc222569974098ef4ee9c3368bedf0196806
 
 defaults:
   run:
@@ -50,7 +53,9 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      # Actions are pinned to full commit SHAs (what each tag pointed to when this was written), so a moved tag
+      # cannot change what runs.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
@@ -81,9 +86,20 @@ jobs:
             echo "::warning title=App icon transparency::$ICON has an alpha channel. App Store Connect rejects that (ITMS-90717), so the upload job will stop."
           fi
 
+      - name: Install XcodeGen
+        run: |
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/xcodegen.zip" \
+            "https://github.com/yonaskolb/XcodeGen/releases/download/$XCODEGEN_VERSION/xcodegen.zip"
+          GOT=$(shasum -a 256 "$RUNNER_TEMP/xcodegen.zip" | cut -d ' ' -f 1)
+          if [ "$GOT" != "$XCODEGEN_SHA256" ]; then
+            echo "::error title=XcodeGen download::xcodegen.zip $XCODEGEN_VERSION does not have the expected SHA-256 (got $GOT)."
+            exit 1
+          fi
+          unzip -q -o "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/xcodegen/bin" >> "$GITHUB_PATH"
+
       - name: Generate the Xcode project
         run: |
-          brew install xcodegen
           xcodegen --version
           xcodegen generate
 
@@ -98,7 +114,8 @@ jobs:
       - name: Check what went into the app
         run: |
           APP="build/dd/Build/Products/Debug-iphonesimulator/$APP_NAME.app"
-          for f in web/index.html web/three.min.js web/fonts/rubik.css web/fonts/rubik-latin.woff2 PrivacyInfo.xcprivacy Assets.car; do
+          for f in web/index.html web/three.min.js web/fonts/rubik.css web/fonts/rubik-latin.woff2 web/fonts/OFL.txt \
+                   web/THIRD-PARTY-NOTICES.txt PrivacyInfo.xcprivacy Assets.car; do
             if [ ! -e "$APP/$f" ]; then
               echo "::error title=Missing from the app::$f is not in $APP_NAME.app"
               exit 1
@@ -107,11 +124,13 @@ jobs:
           plutil -p "$APP/Info.plist"
           ls -la "$APP/web" "$APP/web/fonts"
 
-      - name: Launch in a simulator and take a screenshot
+      # Starting the simulator may fail for reasons that have nothing to do with the app (no simulator on the runner
+      # image, a slow first boot), so that part only warns. Once it has started, the launch check below is strict.
+      - name: Start an iPhone simulator
+        id: boot
         continue-on-error: true
         timeout-minutes: 12
         run: |
-          APP="build/dd/Build/Products/Debug-iphonesimulator/$APP_NAME.app"
           RUNTIME=$(xcrun simctl list runtimes available -j \
             | jq -r '[.runtimes[] | select(.identifier | contains("SimRuntime.iOS"))] | sort_by(.version | split(".") | map(tonumber)) | last | .identifier // empty')
           UDID=$(xcrun simctl list devices available -j \
@@ -121,18 +140,38 @@ jobs:
             exit 0
           fi
           echo "Runtime $RUNTIME, device $UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+
+      - name: Launch the app in the simulator and take a screenshot
+        if: steps.boot.outcome == 'success' && steps.boot.outputs.udid != ''
+        timeout-minutes: 8
+        env:
+          UDID: ${{ steps.boot.outputs.udid }}
+        run: |
+          APP="build/dd/Build/Products/Debug-iphonesimulator/$APP_NAME.app"
           # A local ad hoc signature lets the simulator run the unsigned build (no Apple account involved).
           codesign --force --sign - --timestamp=none "$APP"
-          xcrun simctl bootstatus "$UDID" -b
           xcrun simctl install "$UDID" "$APP"
-          xcrun simctl launch "$UDID" "$BUNDLE_ID"
+          LAUNCH=$(xcrun simctl launch "$UDID" "$BUNDLE_ID")
+          echo "$LAUNCH"
+          PID=$(printf '%s\n' "$LAUNCH" | sed -nE 's/.*: *([0-9]+)$/\1/p' | tail -n 1)
           sleep 25
           xcrun simctl io "$UDID" screenshot build/simulator.png
           xcrun simctl spawn "$UDID" log show --last 3m --style compact --predicate 'process == "SelenaRoller"' | tail -n 80 || true
+          # The app must still be running. A crash at launch fails this job, which also stops the upload job.
+          if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
+            echo "$APP_NAME is still running 25 seconds after launch (pid $PID)."
+          elif xcrun simctl spawn "$UDID" launchctl list 2>/dev/null | grep -q "UIKitApplication:$BUNDLE_ID"; then
+            echo "$APP_NAME is still running 25 seconds after launch."
+          else
+            echo "::error title=App not running::$APP_NAME stopped within 25 seconds of launch. The log above shows why."
+            exit 1
+          fi
 
       - name: Keep the screenshot
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: simulator-screenshot
           path: ios/build/simulator.png
@@ -146,7 +185,7 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
@@ -204,14 +243,28 @@ jobs:
             exit 1
           fi
 
+      - name: Install XcodeGen
+        run: |
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/xcodegen.zip" \
+            "https://github.com/yonaskolb/XcodeGen/releases/download/$XCODEGEN_VERSION/xcodegen.zip"
+          GOT=$(shasum -a 256 "$RUNNER_TEMP/xcodegen.zip" | cut -d ' ' -f 1)
+          if [ "$GOT" != "$XCODEGEN_SHA256" ]; then
+            echo "::error title=XcodeGen download::xcodegen.zip $XCODEGEN_VERSION does not have the expected SHA-256 (got $GOT)."
+            exit 1
+          fi
+          unzip -q -o "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/xcodegen/bin" >> "$GITHUB_PATH"
+
       - name: Generate the Xcode project
         run: |
-          brew install xcodegen
+          xcodegen --version
           xcodegen generate
 
       - name: Archive (unsigned; signing happens at export)
         env:
-          BUILD_NUMBER: ${{ github.run_number }}
+          # Run number and attempt, for example 12.1. A re-run of the same run gets 12.2, so Apple never sees a
+          # build number twice.
+          BUILD_NUMBER: ${{ github.run_number }}.${{ github.run_attempt }}
         run: |
           xcodebuild archive \
             -project "$APP_NAME.xcodeproj" -scheme "$APP_NAME" -configuration Release \
@@ -236,7 +289,7 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          BUILD_NUMBER: ${{ github.run_number }}
+          BUILD_NUMBER: ${{ github.run_number }}.${{ github.run_attempt }}
         run: |
           KEY_ID=$(printf '%s' "$ASC_KEY_ID" | tr -d '[:space:]')
           ISSUER_ID=$(printf '%s' "$ASC_ISSUER_ID" | tr -d '[:space:]')

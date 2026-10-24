@@ -22,7 +22,7 @@ targets:
         INFOPLIST_FILE: SelenaRoller/Info.plist
         GENERATE_INFOPLIST_FILE: NO
         MARKETING_VERSION: "1.0"           # the App Store version
-        CURRENT_PROJECT_VERSION: "1"       # the build number; CI sets it to the workflow run number
+        CURRENT_PROJECT_VERSION: "1"       # the build number; CI sets it to the run number and attempt, e.g. 12.1
         TARGETED_DEVICE_FAMILY: "1"        # iPhone only
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_STYLE: Automatic

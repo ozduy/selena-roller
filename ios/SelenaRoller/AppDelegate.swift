@@ -19,15 +19,28 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
 
 final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
+    private var game: GameViewController?
 
     func scene(_ scene: UIScene,
                willConnectTo session: UISceneSession,
                options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = scene as? UIWindowScene else { return }
         let window = UIWindow(windowScene: windowScene)
+        let game = GameViewController()
         window.backgroundColor = GameViewController.backgroundColor
-        window.rootViewController = GameViewController()
+        window.rootViewController = game
         window.makeKeyAndVisible()
         self.window = window
+        self.game = game
+    }
+
+    /// Notification Centre, Control Centre, Siri or a call: the game is still on screen, so pause the level here.
+    /// (Going to the Home Screen also pauses it, from the page itself.)
+    func sceneWillResignActive(_ scene: UIScene) {
+        game?.pauseGame()
+    }
+
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        game?.reloadIfWaiting()
     }
 }

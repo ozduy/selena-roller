@@ -3,7 +3,8 @@ import WebKit
 
 /// The whole app: one full-screen web view that runs the game bundled in the app's "web" folder.
 final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDelegate, UIScrollViewDelegate {
-    /// The game's sky blue (the page background), also used for the launch screen.
+    /// The game's sky blue (the page background), also used for the launch screen. Info.plist keeps the app in the
+    /// light appearance, so the page uses this same colour in Dark Mode too and nothing flashes at start-up.
     static let backgroundColor = UIColor(named: "LaunchBackground")
         ?? UIColor(red: 0xA7 / 255.0, green: 0xCB / 255.0, blue: 0xE6 / 255.0, alpha: 1)
 
@@ -32,12 +33,23 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
 
     private lazy var webView: WKWebView = makeWebView()
 
+    /// When the page's process last stopped, so a page that keeps stopping is not reloaded over and over.
+    private var recentTerminations: [Date] = []
+    /// True while the game waits for a tap, or for the player to come back to the app, before loading again.
+    private var waitingToReload = false
+    private lazy var retryTap: UITapGestureRecognizer = {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(GameViewController.retryAfterTap))
+        tap.isEnabled = false
+        return tap
+    }()
+
     override func loadView() {
         view = webView
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        webView.addGestureRecognizer(retryTap)
         loadGame()
     }
 
@@ -50,6 +62,26 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
 
     private func loadGame() {
         webView.load(URLRequest(url: Self.startURL))
+    }
+
+    /// Pauses a level that is under way. SceneDelegate calls this when the app stops being the active app
+    /// (Notification Centre, Control Centre, Siri, a call). The page stays visible then, so its own pause on
+    /// visibilitychange does not run.
+    func pauseGame() {
+        webView.evaluateJavaScript("window.selenaPause && window.selenaPause();", completionHandler: nil)
+    }
+
+    /// Loads the game again if it stopped repeatedly and has been waiting. SceneDelegate calls this when the app
+    /// becomes active; a tap on the screen does the same.
+    func reloadIfWaiting() {
+        guard waitingToReload else { return }
+        waitingToReload = false
+        retryTap.isEnabled = false
+        loadGame()
+    }
+
+    @objc private func retryAfterTap() {
+        reloadIfWaiting()
     }
 
     private func makeWebView() -> WKWebView {
@@ -114,8 +146,18 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKUIDele
     }
 
     /// iOS can end the page's process to free memory. Start the game again; progress is saved on the device.
+    /// If it stops three times within a minute (for example very low memory on an older iPhone), wait for a tap
+    /// or for the player to come back to the app before trying again, instead of reloading over and over.
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
-        loadGame()
+        let now = Date()
+        recentTerminations = recentTerminations.filter { now.timeIntervalSince($0) < 60 }
+        recentTerminations.append(now)
+        if recentTerminations.count < 3 {
+            loadGame()
+        } else {
+            waitingToReload = true
+            retryTap.isEnabled = true
+        }
     }
 
     // MARK: - WKUIDelegate
