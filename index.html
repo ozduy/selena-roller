@@ -130,6 +130,8 @@ h2 {
 .lvltop { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; line-height: 1.1; }
 .lvllabel { flex: none; white-space: nowrap; font-family: var(--display); font-weight: 900; font-size: 17px; text-transform: uppercase; letter-spacing: 0.03em; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3); }
 .lvlworld { min-width: 0; font-weight: 700; font-size: 14px; color: #dbe4f7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* the age choice in play (turtle, bunny, fox or cheetah), so a grown-up can see which one is on */
+.lvlage { display: inline-block; width: 22px; height: 22px; margin: 0 5px 0 -2px; vertical-align: -5px; filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.3)); }
 .bar { position: relative; height: 12px; border-radius: 99px; background: rgba(0, 0, 0, 0.35); margin-top: 5px; box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.35); }
 .fill {
   position: absolute; left: 0; top: 0; bottom: 0; width: 100%; border-radius: 99px; transform-origin: left center; transform: scaleX(0);
@@ -363,6 +365,17 @@ h2 {
   .seg button { padding: 4px 2px 5px; }
   .seg button svg { width: 28px; height: 28px; }
 }
+/* small phones held upright: a slimmer age row keeps the menu panel on the screen, and smaller animals keep the
+   Who's playing heading clear of the top edge */
+@media (max-height: 600px) and (orientation: portrait) {
+  .seg button { padding: 4px 2px 5px; }
+  .seg button svg { width: 26px; height: 26px; }
+  .who { gap: 12px; }
+  .whohead p { font-size: 15px; }
+  .agebtn { min-height: 0; padding: 8px 6px 10px; }
+  .agebtn .pic { width: 70px; height: 70px; }
+  .agebtn .yrs { font-size: 32px; }
+}
 @media (prefers-reduced-motion: reduce) {
   .finger, .pop, .toast.show, .confetti i, .ballitem.shake, .rays, .tapring, .announce.show, .badge.ending, .meter.full { animation: none !important; }
 }
@@ -445,7 +458,7 @@ h2 {
   <div class="hud" id="hud" hidden>
     <button class="hbtn" id="pauseBtn" aria-label="Pause"><svg><use href="#i-pause"/></svg></button>
     <div class="lvlbox">
-      <div class="lvltop"><span class="lvllabel" id="lvlLabel">Level 1</span><span class="lvlworld" id="hudWorld">Sunny Bay</span></div>
+      <div class="lvltop"><span class="lvllabel"><svg class="lvlage" aria-hidden="true"><use id="hudAge" href="#i-turtle"/></svg><span id="lvlLabel">Level 1</span></span><span class="lvlworld" id="hudWorld">Sunny Bay</span></div>
       <div class="bar"><div class="fill" id="barFill"></div><svg class="flag"><use href="#i-flag"/></svg></div>
     </div>
     <div class="pill" id="hudStarPill"><svg><use href="#i-star"/></svg><span id="hudStars">0</span></div>
@@ -507,7 +520,7 @@ h2 {
   </section>
 
   <section class="screen who" id="who" hidden>
-    <header class="whohead"><h2>Who's playing?</h2><p>Tap your age. You can change it later.</p></header>
+    <header class="whohead"><h2>Who's playing?</h2><p>Tap how old you are. A grown-up can help. Change it any time in the menu.</p></header>
     <div class="whogrid" id="whoGrid" role="group" aria-label="Who's playing">
       <button class="agebtn a0" data-a="0" aria-label="Ages 3 to 4, gentle speed"><svg class="pic"><use href="#i-turtle"/></svg><span class="yrs">3-4</span><span class="word">Gentle</span><svg class="spd"><use href="#i-chev1"/></svg></button>
       <button class="agebtn a1" data-a="1" aria-label="Ages 5 to 6, quick speed"><svg class="pic"><use href="#i-bunny"/></svg><span class="yrs">5-6</span><span class="word">Quick</span><svg class="spd"><use href="#i-chev2"/></svg></button>
@@ -548,6 +561,14 @@ h2 {
   <div class="toast" id="toast" hidden></div>
 </div>
 
+<script>
+// The first start asks who is playing: show that screen at once, while the 3D library is still downloading.
+(() => {
+  let picked = false;
+  try { const s = JSON.parse(localStorage.getItem('selenaRoller.v1')); picked = !!(s && typeof s === 'object' && s.agePicked); } catch (e) {}
+  if (!picked) { document.getElementById('menu').hidden = true; document.getElementById('who').hidden = false; }
+})();
+</script>
 <script src="three.min.js"></script>
 <script>
 (() => {
@@ -592,10 +613,10 @@ h2 {
   // sens: metres of steering for one screen width, accel: how fast the ball picks up speed, rollIn: start-up time (s),
   // help: falls in one section before the helping hand adds rails, a Bubble Shield, then a Fly bubble, c: how tough the new pieces are.
   const AGES = [
-    { range: '3-4', word: 'Gentle', hint: 'Gentle speed for ages 3 to 4', v1: 0, tau: 0.085, cap: 1.15, dead: 4, sens: 8, accel: 2.3, rollIn: 0.6, help: [1, 2, 3], c: 0 },
-    { range: '5-6', word: 'Quick', hint: 'Quick speed for ages 5 to 6', v1: 4.6, tau: 0.07, cap: 1.45, dead: 3, sens: 8.5, accel: 2.8, rollIn: 0.5, help: [2, 3, 4], c: 0.35 },
-    { range: '7-8', word: 'Fast', hint: 'Fast speed for ages 7 to 8', v1: 5.6, tau: 0.06, cap: 1.7, dead: 2, sens: 9, accel: 3.2, rollIn: 0.45, help: [3, 4, 5], c: 0.7 },
-    { range: '9+', word: 'Turbo', hint: 'Turbo speed for ages 9 and up', v1: 6.6, tau: 0.05, cap: 1.95, dead: 2, sens: 9.5, accel: 3.6, rollIn: 0.4, help: [3, 4, 5], c: 1 }
+    { range: '3-4', word: 'Gentle', icon: '#i-turtle', hint: 'Gentle speed for ages 3 to 4', v1: 0, tau: 0.085, cap: 1.15, dead: 4, sens: 8, accel: 2.3, rollIn: 0.6, help: [1, 2, 3], c: 0 },
+    { range: '5-6', word: 'Quick', icon: '#i-bunny', hint: 'Quick speed for ages 5 to 6', v1: 4.6, tau: 0.07, cap: 1.45, dead: 3, sens: 8.5, accel: 2.8, rollIn: 0.5, help: [2, 3, 4], c: 0.35 },
+    { range: '7-8', word: 'Fast', icon: '#i-fox', hint: 'Fast speed for ages 7 to 8', v1: 5.6, tau: 0.06, cap: 1.7, dead: 2, sens: 9, accel: 3.2, rollIn: 0.45, help: [3, 4, 5], c: 0.7 },
+    { range: '9+', word: 'Turbo', icon: '#i-cheetah', hint: 'Turbo speed for ages 9 and up', v1: 6.6, tau: 0.05, cap: 1.95, dead: 2, sens: 9.5, accel: 3.6, rollIn: 0.4, help: [3, 4, 5], c: 1 }
   ];
   const ageOf = () => clamp(save.speed | 0, 0, 3);
   function ageSpeed(age, n, base) {
@@ -714,6 +735,7 @@ h2 {
   try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance', stencil: false }); } catch (e) { renderer = null; }
   if (!renderer) {
     $('menu').innerHTML = '<div class="panel center nogl"><h2>3D is switched off</h2><p>This browser could not start 3D graphics. Try opening the link in Chrome or Safari.</p></div>';
+    $('who').hidden = true; $('menu').hidden = false;
     return;
   }
   // The first start shows Who's playing straight away, before the menu (start-up may still be waiting for the web font).
@@ -4453,6 +4475,7 @@ h2 {
     updateCamera(0, true);
     if (headless) return;
     $('lvlLabel').textContent = 'Level ' + lv.n;
+    $('hudAge').setAttribute('href', AGES[lv.P.age].icon);
     $('hudWorld').textContent = lv.world.name;
     $('menuLvl').textContent = 'Level ' + lv.n;
     $('themeName').textContent = lv.world.name;
