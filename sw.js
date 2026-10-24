@@ -1,6 +1,10 @@
 // Keeps Selena Roller playable without a signal once it has been opened.
-const CACHE = 'selena-roller-v1';
-const CORE = ['./', './index.html', './three.min.js', './manifest.webmanifest', './icon-180.png', './icon-192.png'];
+const CACHE = 'selena-roller-v2';
+const CORE = [
+  './', './index.html', './three.min.js', './manifest.webmanifest', './icon-180.png', './icon-192.png',
+  './fonts/rubik.css', './fonts/rubik-latin.woff2', './fonts/rubik-latin-ext.woff2',
+  './fonts/rubik-cyrillic.woff2', './fonts/rubik-cyrillic-ext.woff2', './fonts/rubik-hebrew.woff2', './fonts/rubik-arabic.woff2'
+];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(CORE)).then(() => self.skipWaiting()));
