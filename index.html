@@ -1997,8 +1997,9 @@ h2 {
         const grade = Math.min(up ? 0.25 : 0.28, lerp(up ? 0.08 : 0.09, up ? 0.17 : 0.21, c) + g * t * 0.07);
         F.h = +(grade * F.len * L).toFixed(2);
         F.narrowW = !F.rails && c * t > 0.3 ? +Math.max(2.8, P.width - 0.8 * c * t).toFixed(2) : 0;
-        F.shift = !up && !first && c >= 0.5 && t > 0.2 ? (rf() < 0.5 ? -1 : 1) * lerp(1.6, 3.2, t) : 0;
-        F.fol = lerp(1, 0.6, c);
+        // ages 7 and up: from the middle levels a climb or a run down also bends sideways, and the child steers part of it
+        F.shift = !first && c >= 0.5 && t > 0.2 ? (rf() < 0.5 ? -1 : 1) * lerp(1.6, 3.2, t) : 0;
+        F.fol = lerp(1, 0.45, c);
         F.body = F.len + 4;
         F.risk = F.rails ? 0 : 1;
         break;
@@ -2019,11 +2020,14 @@ h2 {
       }
       case 'IS': {
         F.k = first ? 1 : clamp(1 + Math.floor(t * lerp(1.2, 3.2, c) + rf() * 0.9), 1, Math.round(lerp(2, 4, c)));
-        F.li = first || c < 0.5 ? 2 : (rf() < 0.35 + 0.4 * c ? 1 : 2);
+        // at high speed the islands stay two steps long and the gaps at least two steps wide, so every hop and every
+        // island lasts long enough to see the next one and steer for it
+        const quick = P.vel > 7.5;
+        F.li = first || c < 0.5 || quick ? 2 : (rf() < 0.35 + 0.4 * c ? 1 : 2);
         F.gaps = [];
-        for (let q = 0; q <= F.k; q++) F.gaps.push(first ? 1 : clamp(1 + (rf() < c * (0.4 + 0.6 * t) ? 1 : 0) + (c > 0.9 && t > 0.6 && rf() < 0.4 ? 1 : 0), 1, 3));
+        for (let q = 0; q <= F.k; q++) F.gaps.push(first ? 1 : Math.max(quick ? 2 : 1, clamp(1 + (rf() < c * (0.4 + 0.6 * t) ? 1 : 0) + (c > 0.9 && t > 0.6 && rf() < 0.4 ? 1 : 0), 1, 3)));
         F.w = +Math.max(1.9, lerp(3.8, 2.6, c) - 0.5 * t * g).toFixed(2);
-        F.zig = first ? 0 : lerp(0, 1.3, c) * (0.5 + 0.5 * t);
+        F.zig = first || !c ? 0 : lerp(0.3, 1.4, c) * (0.8 + 0.2 * t);
         F.fol = first ? 1 : lerp(1, 0.4, c);
         F.railsI = P.age === 0 || first;
         F.body = 2 + F.gaps.reduce((a, b) => a + b, 0) + F.k * F.li + 4;
@@ -2238,7 +2242,8 @@ h2 {
       busyR(s0, end); rankR(s0, end);
       switch (F.type) {
         case 'UP': case 'DN': {
-          // climb or run down; the direction flips if the course would leave its comfortable height band
+          // climb or run down (with a sideways bend in it for older children); the direction flips if the course would
+          // leave its comfortable height band
           let up = F.type === 'UP';
           const here = yAdd[s0 * SUB];
           if (up && here > 5) up = false; else if (!up && here < -12) up = true;
@@ -2267,16 +2272,18 @@ h2 {
         }
         case 'IS': {
           // stepping stones: a pad on the deck, then small islands with a pad each, then a wide landing deck.
-          // Older children zig-zag between the islands and steer in the air (fol < 1); a soft pull helps near misses land.
-          let p = s0 + 1, off = 0, side = rf() < 0.5 ? 1 : -1;
+          // The islands step out to one side and back. Older children steer onto each island in the air (fol < 1);
+          // a soft pull helps a child who is steering for it land a near miss.
+          let p = s0 + 1, off = 0;
+          const side = rf() < 0.5 ? 1 : -1;
           lv.kind[p] = 1; forceR(s0, p, railMode);
           for (let q = 0; q <= F.k; q++) {
             const g = F.gaps[q], g0 = p + 1, isl = g0 + g, last = q === F.k;
             for (let k = 0; k < g; k++) lv.gap[g0 + k] = 1;
             drop(g0, last ? -0.5 : (rf() < 0.5 ? -0.35 : 0.25));
-            const want = last ? 0 : side * F.zig;
+            const want = last ? 0 : side * F.zig * Math.min(q + 1, F.k - q);
             if (Math.abs(want - off) > 0.01) shift(g0, isl, want - off);
-            off = want; side = -side;
+            off = want;
             lv.launches.push({ kind: 'pad', step: p, sTrig: q === 0 ? p * L + 0.15 : p * L + (F.li === 1 ? 1.3 : 0.9), sLand: last ? (isl + 2) * L : isl * L + (F.li === 1 ? 0.7 : 1.0), H: 1.25 + 0.25 * g, half: q === 0 ? 99 : F.w / 2, gapSteps: g, stone: true, fol: F.fol, landHalf: last ? 9 : F.w / 2 });
             if (!last) {
               const i2 = isl + F.li - 1;
@@ -2293,14 +2300,17 @@ h2 {
           break;
         }
         case 'RJ': {
-          // a narrow ramp that climbs to a lip, a jump off its end, and a landing further down
+          // a narrow ramp that climbs to a lip (at full speed, like the other kicker ramps), a jump off its end, and a
+          // landing further down. For ages 7 and up the landing sits off to one side, so the child steers in the air.
           const a = s0 + 2, b = a + F.lr - 1, g0 = b + 1, land0 = g0 + F.g;
           narrow(a, b, F.w, 2, 0);
           for (let k = a; k <= b; k++) lv.bridge[k] = 1;
-          rampUp(a, b + 1, F.h); lv.kind[b] = 7;
+          rampUp(a, b + 1, F.h); lv.kind[b] = 7; flatSpdR(a, b);
           for (let k = 0; k < F.g; k++) lv.gap[g0 + k] = 1;
           drop(g0, -(1.2 + 0.5 * F.h));
-          lv.launches.push({ kind: 'ramp', step: b, sTrig: (b + 1) * L - 0.25, sLand: (land0 + 2) * L, H: 1.7 + 0.25 * F.g, half: 99, gapSteps: F.g });
+          const off = !F.first && F.c >= 0.5 ? (rf() < 0.5 ? -1 : 1) * lerp(1.6, 2.6, F.t) : 0;
+          if (off) shift(g0, land0, off);
+          lv.launches.push({ kind: 'ramp', step: b, sTrig: (b + 1) * L - 0.25, sLand: (land0 + 2) * L, H: 1.7 + 0.25 * F.g, half: 99, gapSteps: F.g, steer: !!off, fol: off ? lerp(1, 0.3, F.c) : 1, landHalf: landW / 2 });
           forceR(s0, b, railMode); forceR(land0, land0 + 3, P.landRail || F.rails ? 1 : 0);
           if (landW > wBase) widen(land0, land0 + 3, landW - wBase, 1);
           straightR(s0 - 3, end + 2); noHopR(s0 - 2, land0); featR(a, b, 4);
@@ -2538,7 +2548,8 @@ h2 {
       if (ln.kind === 'hop') continue;
       const y0 = sampleArr(lv.y, ln.sTrig) + R, y1 = sampleArr(lv.y, ln.sLand) + R;
       for (const u of [0.3, 0.5, 0.7]) addStar(lerp(ln.sTrig, ln.sLand, u), 0, lerp(y0, y1, u) + 4 * ln.H * u * (1 - u), false);
-      if (n >= 2) { const sh = ln.H * 2 + 1.4; for (const u of [0.38, 0.5, 0.62]) addStar(lerp(ln.sTrig, ln.sLand, u), 0, lerp(y0, y1, u) + 4 * sh * u * (1 - u), true); }
+      // Super Jump sky stars, only over the jumps it lifts (not over island hops)
+      if (n >= 2 && !ln.stone) { const sh = ln.H * 2 + 1.4; for (const u of [0.38, 0.5, 0.62]) addStar(lerp(ln.sTrig, ln.sLand, u), 0, lerp(y0, y1, u) + 4 * sh * u * (1 - u), true); }
     }
     {
       let left = budget - lv.stars.length, i = 4;
@@ -3357,7 +3368,7 @@ h2 {
   const ball = {
     s: 1.5, lat: 0, y: R, x: 0, z: -1.5, fwd: 0, latV: 0, vy: 0, mode: 'roll', tgt: 0,
     boostT: 0, boostF: 1, bumpT: 0, holdT: 0, assistLat: 0, ghostT: 0, tempRail: 0, teeter: 0, hopCool: 0, slopeF: 1,
-    arc: { s0: 0, s1: 0, y0: 0, y1: 0, H: 0, T: 1, t: 0, latMin: -9, latMax: 9, kind: '', lat0: 0, fol: 1, land: 9, pull: 0, pullR: 0 },
+    arc: { s0: 0, s1: 0, y0: 0, y1: 0, H: 0, T: 1, t: 0, latMin: -9, latMax: 9, kind: '', lat0: 0, fol: 1, land: 9, pull: 0, pullR: 0, tgt0: 0, drift: 0 },
     fly: { h: 0, landing: false, s0: 0, s1: 0, y0: 0, lat0: 0 },
     res: { s0: 0, s1: 0, y0: 0, lat0: 0, t: 0, T: 1.2 },
     squash: 0, plat: null, lastLand: 0
@@ -3506,17 +3517,22 @@ h2 {
     if (latMin > latMax) { const m = (latMin + latMax) / 2; latMin = latMax = m; }
     a.latMin = latMin; a.latMax = latMax; a.lat0 = b.lat; a.fol = 1; a.land = 9; a.pull = 0; a.pullR = 0;
     b.tgt = clamp(b.tgt, latMin, latMax);
+    a.tgt0 = b.tgt; a.drift = 0;
     b.mode = 'arc'; b.fwd = (s1 - s0) / a.T; b.teeter = 0; b.plat = null;
   }
   function startArc(ln) {
-    const b = ball, sup = bonus.type === 'jump' && ln.kind !== 'hop';
+    // Super Jump lifts pad and ramp jumps, but not the short island hops (they would spike up and slam down)
+    const b = ball, sup = bonus.type === 'jump' && ln.kind !== 'hop' && !ln.stone;
     const H = sup ? ln.H * 2 + 1.4 : ln.H;
     // island hops fly a little slower than pad jumps, so there is time to look at the next island
     const v = ln.kind === 'hop' ? Math.max(b.fwd, 1) : Math.max(b.fwd, levelSpeed()) * (ln.stone ? 1.05 : 1.35);
     const s0 = b.s, s1 = Math.max(ln.sLand, s0 + 1);
-    if (ln.stone && ln.fol < 1) {
-      // older children steer onto the next island in the air; a soft pull near the end lands near misses
-      startGuided(s0, s1, H, (s1 - s0) / v, -4, 4, ln.kind);
+    if ((ln.stone || ln.steer) && ln.fol < 1) {
+      // older children steer onto the next island (or the off-side landing) in the air; once they steer for it, a soft
+      // pull near the end lands a near miss. A railed side of the landing holds the ball in the air, as the rail would,
+      // instead of snapping it in at touch-down.
+      const lr = landRange(s1), i1 = stepAt(s1);
+      startGuided(s0, s1, H, (s1 - s0) / v, lvl.railL[i1] ? lr[0] : -4, lvl.railR[i1] ? lr[1] : 4, ln.kind);
       const a = b.arc, age = lvl.P.age;
       a.fol = ln.fol; a.land = ln.landHalf; a.pull = [0, 9, 7, 5][age]; a.pullR = [0, 1.0, 0.8, 0.6][age];
     } else {
@@ -3532,8 +3548,9 @@ h2 {
     b.s = lerp(a.s0, a.s1, u);
     b.y = lerp(a.y0, a.y1, u) + 4 * a.H * u * (1 - u);
     if (a.fol < 1) {
-      const d = (cxAt(b.s) - cxAt(sPrev)) * (1 - a.fol); b.lat -= d; b.tgt -= d;
-      if (u > 0.5 && a.pull) {
+      const d = (cxAt(b.s) - cxAt(sPrev)) * (1 - a.fol); b.lat -= d; b.tgt -= d; a.drift += d;
+      // the pull only helps a child who has steered at least 40% of the drift back (the finger's own move since take-off)
+      if (u > 0.5 && a.pull && (b.tgt - a.tgt0 + a.drift) * a.drift > 0.4 * a.drift * a.drift) {
         const lim = Math.max(0.2, a.land - 0.35), aim = clamp(b.lat, -lim, lim), miss = Math.abs(b.lat - aim);
         if (miss > 0 && miss < a.pullR + 0.35) { const k = Math.min(1, dt * a.pull); b.lat += (aim - b.lat) * k; b.tgt += (aim - b.tgt) * k; }
       }
