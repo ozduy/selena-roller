@@ -1,0 +1,286 @@
+# Builds the Selena Roller iPhone app on a GitHub-hosted Mac.
+# - Every push that touches the app or the web game: a simulator build with no signing, plus a launch screenshot.
+# - Run it by hand (Actions > iOS app > Run workflow) with "upload" ticked: archive, sign with Apple's
+#   cloud-managed certificate and upload to App Store Connect / TestFlight. ios/README.md lists the secrets.
+name: iOS app
+
+on:
+  push:
+    branches: [ios-app, main]
+    paths:
+      - ".github/workflows/ios.yml"
+      - "ios/**"
+      - "index.html"
+      - "three.min.js"
+      - "manifest.webmanifest"
+      - "fonts/**"
+      - "icon-*.png"
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: "Archive, sign and upload the build to App Store Connect (TestFlight)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# A newer push cancels an older push build; manual runs (uploads) are never cancelled.
+concurrency:
+  group: ios-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: ${{ github.event_name == 'push' }}
+
+env:
+  # Xcode 26.6 with the iOS 26.5 SDK. App Store Connect has required the iOS 26 SDK or later since April 2026.
+  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+  APP_NAME: SelenaRoller
+  BUNDLE_ID: com.ozduy.selenaroller
+  HOMEBREW_NO_AUTO_UPDATE: "1"
+  HOMEBREW_NO_INSTALL_CLEANUP: "1"
+  HOMEBREW_NO_ENV_HINTS: "1"
+
+defaults:
+  run:
+    shell: bash
+    working-directory: ios
+
+jobs:
+  simulator:
+    name: Simulator build (no signing)
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Check Xcode and the iOS SDK
+        run: |
+          if [ ! -d "$DEVELOPER_DIR" ]; then
+            echo "::error title=Xcode not found::$DEVELOPER_DIR is not on this runner image. Choose an installed Xcode 26 or later and update DEVELOPER_DIR in .github/workflows/ios.yml."
+            ls -d /Applications/Xcode*.app || true
+            exit 1
+          fi
+          xcodebuild -version
+          SDK=$(xcrun --sdk iphoneos --show-sdk-version)
+          echo "iOS SDK $SDK"
+          if [ "${SDK%%.*}" -lt 26 ]; then
+            echo "::error title=iOS SDK too old::App Store Connect only accepts apps built with the iOS 26 SDK or later; this Xcode has iOS $SDK."
+            exit 1
+          fi
+
+      - name: Check the app icon
+        run: |
+          ICON=SelenaRoller/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png
+          INFO=$(sips -g pixelWidth -g pixelHeight -g hasAlpha "$ICON")
+          echo "$INFO"
+          if [[ "$INFO" != *"pixelWidth: 1024"* || "$INFO" != *"pixelHeight: 1024"* ]]; then
+            echo "::warning title=App icon size::$ICON should be 1024 x 1024 pixels."
+          fi
+          if [[ "$INFO" == *"hasAlpha: yes"* ]]; then
+            echo "::warning title=App icon transparency::$ICON has an alpha channel. App Store Connect rejects that (ITMS-90717), so the upload job will stop."
+          fi
+
+      - name: Generate the Xcode project
+        run: |
+          brew install xcodegen
+          xcodegen --version
+          xcodegen generate
+
+      - name: Build for the iOS Simulator
+        run: |
+          xcodebuild build \
+            -project "$APP_NAME.xcodeproj" -scheme "$APP_NAME" -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/dd \
+            CODE_SIGNING_ALLOWED=NO | xcbeautify --renderer github-actions
+
+      - name: Check what went into the app
+        run: |
+          APP="build/dd/Build/Products/Debug-iphonesimulator/$APP_NAME.app"
+          for f in web/index.html web/three.min.js web/fonts/rubik.css web/fonts/rubik-latin.woff2 PrivacyInfo.xcprivacy Assets.car; do
+            if [ ! -e "$APP/$f" ]; then
+              echo "::error title=Missing from the app::$f is not in $APP_NAME.app"
+              exit 1
+            fi
+          done
+          plutil -p "$APP/Info.plist"
+          ls -la "$APP/web" "$APP/web/fonts"
+
+      - name: Launch in a simulator and take a screenshot
+        continue-on-error: true
+        timeout-minutes: 12
+        run: |
+          APP="build/dd/Build/Products/Debug-iphonesimulator/$APP_NAME.app"
+          RUNTIME=$(xcrun simctl list runtimes available -j \
+            | jq -r '[.runtimes[] | select(.identifier | contains("SimRuntime.iOS"))] | sort_by(.version | split(".") | map(tonumber)) | last | .identifier // empty')
+          UDID=$(xcrun simctl list devices available -j \
+            | jq -r --arg rt "$RUNTIME" '[.devices[$rt][]? | select(.name | startswith("iPhone"))] | (map(select(.name == "iPhone 17 Pro")) + .) | .[0].udid // empty')
+          if [ -z "$UDID" ]; then
+            echo "::warning::No iPhone simulator found, so the launch check was skipped."
+            exit 0
+          fi
+          echo "Runtime $RUNTIME, device $UDID"
+          # A local ad hoc signature lets the simulator run the unsigned build (no Apple account involved).
+          codesign --force --sign - --timestamp=none "$APP"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" "$APP"
+          xcrun simctl launch "$UDID" "$BUNDLE_ID"
+          sleep 25
+          xcrun simctl io "$UDID" screenshot build/simulator.png
+          xcrun simctl spawn "$UDID" log show --last 3m --style compact --predicate 'process == "SelenaRoller"' | tail -n 80 || true
+
+      - name: Keep the screenshot
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: simulator-screenshot
+          path: ios/build/simulator.png
+          if-no-files-found: ignore
+          retention-days: 7
+
+  upload:
+    name: Archive, sign and upload to App Store Connect
+    needs: simulator
+    if: github.event_name == 'workflow_dispatch' && inputs.upload
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Check the signing secrets
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          missing=""
+          [ -n "$ASC_KEY_ID" ] || missing="$missing ASC_KEY_ID"
+          [ -n "$ASC_ISSUER_ID" ] || missing="$missing ASC_ISSUER_ID"
+          [ -n "$ASC_KEY_P8_BASE64" ] || missing="$missing ASC_KEY_P8_BASE64"
+          [ -n "$APPLE_TEAM_ID" ] || missing="$missing APPLE_TEAM_ID"
+          if [ -n "$missing" ]; then
+            echo "::error title=Missing secrets::These repository secrets are not set:$missing. Add them under Settings > Secrets and variables > Actions (see ios/README.md), then run the workflow again."
+            exit 1
+          fi
+          # Format checks only; the values themselves are never printed.
+          TEAM_ID=$(printf '%s' "$APPLE_TEAM_ID" | tr -d '[:space:]')
+          KEY_ID=$(printf '%s' "$ASC_KEY_ID" | tr -d '[:space:]')
+          ISSUER_ID=$(printf '%s' "$ASC_ISSUER_ID" | tr -d '[:space:]')
+          bad=""
+          [[ "$TEAM_ID" =~ ^[A-Z0-9]{10}$ ]] || bad="$bad APPLE_TEAM_ID (10 capital letters and digits)"
+          [[ "$KEY_ID" =~ ^[A-Z0-9]{10}$ ]] || bad="$bad ASC_KEY_ID (10 capital letters and digits)"
+          [[ "$ISSUER_ID" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]] || bad="$bad ASC_ISSUER_ID (a UUID)"
+          if [ -n "$bad" ]; then
+            echo "::error title=Secrets look wrong::Expected formats:$bad. See ios/README.md."
+            exit 1
+          fi
+          echo "All four signing secrets are set."
+
+      - name: Check Xcode and the iOS SDK
+        run: |
+          if [ ! -d "$DEVELOPER_DIR" ]; then
+            echo "::error title=Xcode not found::$DEVELOPER_DIR is not on this runner image. Choose an installed Xcode 26 or later and update DEVELOPER_DIR in .github/workflows/ios.yml."
+            exit 1
+          fi
+          xcodebuild -version
+          SDK=$(xcrun --sdk iphoneos --show-sdk-version)
+          echo "iOS SDK $SDK"
+          if [ "${SDK%%.*}" -lt 26 ]; then
+            echo "::error title=iOS SDK too old::App Store Connect only accepts apps built with the iOS 26 SDK or later; this Xcode has iOS $SDK."
+            exit 1
+          fi
+
+      - name: Check the app icon
+        run: |
+          ICON=SelenaRoller/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png
+          INFO=$(sips -g pixelWidth -g pixelHeight -g hasAlpha "$ICON")
+          echo "$INFO"
+          if [[ "$INFO" == *"hasAlpha: yes"* ]]; then
+            echo "::error title=App icon transparency::$ICON has an alpha channel. App Store Connect rejects that (ITMS-90717). Save it as a PNG without transparency."
+            exit 1
+          fi
+
+      - name: Generate the Xcode project
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Archive (unsigned; signing happens at export)
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: |
+          xcodebuild archive \
+            -project "$APP_NAME.xcodeproj" -scheme "$APP_NAME" -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/$APP_NAME.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            CURRENT_PROJECT_VERSION="$BUILD_NUMBER" | xcbeautify --renderer github-actions
+
+      - name: Check the archive
+        run: |
+          APP="$RUNNER_TEMP/$APP_NAME.xcarchive/Products/Applications/$APP_NAME.app"
+          if [ ! -f "$APP/web/index.html" ]; then
+            echo "::error title=Archive incomplete::The web game is missing from the archived app."
+            exit 1
+          fi
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' -c 'Print :CFBundleShortVersionString' \
+            -c 'Print :CFBundleVersion' -c 'Print :DTSDKName' -c 'Print :DTXcode' "$APP/Info.plist"
+
+      - name: Export, sign and upload to App Store Connect
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: |
+          KEY_ID=$(printf '%s' "$ASC_KEY_ID" | tr -d '[:space:]')
+          ISSUER_ID=$(printf '%s' "$ASC_ISSUER_ID" | tr -d '[:space:]')
+          TEAM_ID=$(printf '%s' "$APPLE_TEAM_ID" | tr -d '[:space:]')
+          KEY_DIR="$RUNNER_TEMP/asc-key"
+          KEY="$KEY_DIR/AuthKey_$KEY_ID.p8"
+          umask 077
+          mkdir -p "$KEY_DIR"
+          # The secret holds the .p8 file as base64. If the plain key text was stored instead, use it as it is.
+          if [[ "$ASC_KEY_P8_BASE64" == *"BEGIN PRIVATE KEY"* ]]; then
+            printf '%s\n' "$ASC_KEY_P8_BASE64" > "$KEY.raw"
+          else
+            printf '%s' "$ASC_KEY_P8_BASE64" | tr -d ' \r\n\t' | base64 --decode > "$KEY.raw" 2>/dev/null || true
+          fi
+          tr -d '\r' < "$KEY.raw" > "$KEY"
+          rm -f "$KEY.raw"
+          if ! grep -q 'BEGIN PRIVATE KEY' "$KEY"; then
+            echo "::error title=ASC_KEY_P8_BASE64::The secret is not a base64-encoded .p8 private key. Store the base64 of the whole AuthKey_XXXXXXXXXX.p8 file (see ios/README.md)."
+            exit 1
+          fi
+          cp ExportOptions.plist "$RUNNER_TEMP/ExportOptions.plist"
+          /usr/libexec/PlistBuddy -c "Add :teamID string $TEAM_ID" "$RUNNER_TEMP/ExportOptions.plist"
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/$APP_NAME.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$KEY" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID"
+          echo "::notice title=Uploaded::Build $BUILD_NUMBER went to App Store Connect. Apple emails when it has been processed; it then appears under TestFlight."
+
+      - name: Show the end of the distribution log
+        if: failure()
+        working-directory: .
+        run: |
+          LOG=$(find "$RUNNER_TEMP" "${TMPDIR:-/tmp}" -name 'IDEDistribution.standard.log' 2>/dev/null | head -n 1 || true)
+          if [ -n "$LOG" ]; then
+            tail -n 150 "$LOG"
+          else
+            echo "No distribution log was written."
+          fi
+
+      - name: Delete the key file
+        if: always()
+        working-directory: .
+        run: rm -rf "$RUNNER_TEMP/asc-key"
