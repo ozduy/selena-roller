@@ -2600,7 +2600,7 @@ h2 {
       }
       const picks = [];
       const forced = (step, t) => { if (step > 0) picks.push({ i: step, t, forced: true }); };
-      if (n === 2) { let i = Math.round(N * 0.32); while (i < finish - 8 && !calmAt(i)) i++; forced(i, 'jump'); }
+      if (n === 2) { let i = Math.round(N * 0.32); while (i < finish - 8 && (!calmAt(i) || nearIntro(i))) i++; forced(i, 'jump'); }
       if (n === 5 && lv.chal.length > 1) { const c = cands.find(cc => cc.i < lv.chal[1].s0 && cc.i > lv.chal[0].s0); forced(c ? c.i : lv.chal[1].s0 - 5, 'fly'); }
       if (n === 6 && lv.firstOpen > 0) { let i = lv.firstOpen - 4; while (i > 6 && !calmAt(i)) i--; forced(i, 'shield'); }
       const want = P.pickups - picks.length;
@@ -4834,6 +4834,11 @@ h2 {
       }
       return out;
     }
+    // The terrain pieces planned for a level and age, with their sizes (the same plan genLevel uses).
+    function pieces(n, age) {
+      const P = levelParams(n, age), keys = ['type', 'first', 'rails', 'len', 'h', 'd', 'parts', 'k', 'li', 'gaps', 'w', 'zig', 'fol', 'lr', 'g', 'narrowW', 'shift', 'body'];
+      return planFeatures(P, rng(n * 104729 + P.age * 7717 + 3)).map(F => { const o = {}; for (const k of keys) if (F[k] !== undefined && F[k] !== 0 && F[k] !== false) o[k] = typeof F[k] === 'number' ? +F[k].toFixed(2) : F[k]; return o; });
+    }
     // Every jump in a level: where it lands against its landing zone (metres of deck before and after the touch-down point).
     function landings(n, age) {
       const lv = genLevel(n, age), out = [];
@@ -4872,7 +4877,7 @@ h2 {
       setAge(a) { setAge(a); return AGES[ageOf()].range; },
       age() { return { age: ageOf(), range: AGES[ageOf()].range, speed: lvl ? +levelSpeed().toFixed(2) : null, picked: save.agePicked }; },
       who() { state = 'who'; showScreen('who'); $('hud').hidden = true; $('hud2').hidden = true; hideOverlays(); return state; },
-      speedTable, schedule, landings, peek, advance,
+      speedTable, schedule, pieces, landings, peek, advance,
       release() { dbgHold = false; return state; },
       programs() { return renderer.info.programs.map(p => p.name + ' | ' + String(p.cacheKey).split(',').slice(0, 12).join(',')); },
       steer(lat) { ball.tgt = +lat; return ball.tgt; },
