@@ -244,13 +244,14 @@ h2 {
 .arrow:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0, 0, 0, 0.32); }
 .arrow svg { width: 26px; height: 26px; }
 .seglabel { font-weight: 800; font-size: 15px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: -6px; }
-.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.seg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
 .seg button {
-  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px 9px; border-radius: 16px;
-  font-weight: 800; font-size: 15px; background: var(--chip); border: 1px solid var(--chip-edge);
+  display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 2px 7px; border-radius: 16px; min-width: 0;
+  font-family: var(--display); font-weight: 900; font-size: 17px; font-variant-numeric: tabular-nums;
+  background: var(--chip); border: 1px solid var(--chip-edge);
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
 }
-.seg button svg { width: 30px; height: 22px; }
+.seg button svg { width: 34px; height: 34px; filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.25)); }
 .seg button[aria-pressed="true"] {
   background: linear-gradient(180deg, var(--gold-top), var(--gold)); color: #3b2500; border-color: transparent;
   box-shadow: 0 4px 0 var(--gold-deep), inset 0 2px 0 rgba(255, 255, 255, 0.55);
@@ -316,6 +317,29 @@ h2 {
 @keyframes fall { to { transform: translateY(560px) rotate(720deg); opacity: 0.2; } }
 .nogl { color: var(--text); }
 
+/* Who's playing: four big age buttons on the first start (the menu has the same four in small) */
+.who { gap: 16px; background: linear-gradient(to top, rgba(4, 9, 24, 0.62), rgba(4, 9, 24, 0.18) 70%); }
+.whohead { text-align: center; }
+.whohead h2 { font-size: clamp(34px, 10vw, 46px); }
+.whohead p { margin: 6px 0 0; font-weight: 800; font-size: 17px; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45); }
+.whogrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; width: 100%; max-width: 410px; }
+.agebtn {
+  --c: var(--go); --c-top: var(--go-top); --c-deep: var(--go-deep);
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 0;
+  min-height: 178px; padding: 10px 6px 12px; border-radius: 26px; box-sizing: border-box; color: #fff;
+  background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0) 58%), linear-gradient(180deg, var(--c-top) 0%, var(--c) 62%);
+  box-shadow: 0 7px 0 var(--c-deep), 0 14px 24px rgba(0, 0, 0, 0.32), inset 0 2px 0 rgba(255, 255, 255, 0.5), inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.28); transition: transform 0.06s, box-shadow 0.06s;
+}
+.agebtn:active { transform: translateY(5px); box-shadow: 0 2px 0 var(--c-deep), 0 5px 10px rgba(0, 0, 0, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.5); }
+.agebtn .pic { width: 86px; height: 86px; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.2)); }
+.agebtn .yrs { font-family: var(--display); font-weight: 900; font-size: 36px; line-height: 1; letter-spacing: 0.01em; }
+.agebtn .word { font-family: var(--display); font-weight: 800; font-size: 17px; text-transform: uppercase; letter-spacing: 0.08em; line-height: 1.1; }
+.agebtn .spd { width: 40px; height: 22px; margin-top: 2px; opacity: 0.95; filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.22)); }
+.agebtn.a1 { --c: var(--blue); --c-top: var(--blue-top); --c-deep: var(--blue-deep); }
+.agebtn.a2 { --c: var(--violet); --c-top: #b49bff; --c-deep: #4c2aa8; }
+.agebtn.a3 { --c: #ff5a3c; --c-top: #ff9a5a; --c-deep: #a8260f; }
+
 @media (max-height: 560px) and (orientation: landscape) {
   .menu { flex-direction: row; align-items: center; justify-content: space-around; gap: 16px; }
   .brand { padding-top: 0; }
@@ -330,6 +354,14 @@ h2 {
   .shopcard .btn { min-height: 48px; }
   .announce { bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); flex-direction: row; gap: 12px; }
   .aicon { width: 70px; height: 70px; } .aicon svg { width: 42px; height: 42px; }
+  .who { gap: 10px; }
+  .whohead h2 { font-size: 32px; } .whohead p { margin-top: 2px; font-size: 15px; }
+  .whogrid { grid-template-columns: repeat(4, minmax(0, 1fr)); max-width: 760px; gap: 12px; }
+  .agebtn { min-height: 150px; padding: 8px 4px 10px; }
+  .agebtn .pic { width: 70px; height: 70px; }
+  .agebtn .yrs { font-size: 30px; }
+  .seg button { padding: 4px 2px 5px; }
+  .seg button svg { width: 28px; height: 28px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .finger, .pop, .toast.show, .confetti i, .ballitem.shake, .rays, .tapring, .announce.show, .badge.ending, .meter.full { animation: none !important; }
@@ -352,6 +384,53 @@ h2 {
     <symbol id="i-chev1" viewBox="0 0 30 22"><path d="M12 5l6 6-6 6" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     <symbol id="i-chev2" viewBox="0 0 30 22"><path d="M8.5 5l6 6-6 6M15.5 5l6 6-6 6" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     <symbol id="i-chev3" viewBox="0 0 30 22"><path d="M4.5 5l6 6-6 6M11.5 5l6 6-6 6M18.5 5l6 6-6 6" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chev4" viewBox="0 0 30 22"><path d="M2 5l5.5 6L2 17M9 5l5.5 6L9 17M16 5l5.5 6L16 17M23 5l5.5 6L23 17" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <!-- Who's playing: a turtle, a bunny, a fox and a cheetah, slowest to fastest -->
+    <symbol id="i-turtle" viewBox="0 0 64 64">
+      <path d="M15 41l-2.5 9.5a3 3 0 0 0 2.9 3.6h4.6a3 3 0 0 0 2.9-2.3L25 42zM38 42l1.6 9.8a3 3 0 0 0 2.9 2.3h4.6a3 3 0 0 0 2.9-3.6L47.5 41z" fill="#8ed86b" stroke="#24561a" stroke-width="2.2" stroke-linejoin="round"/>
+      <path d="M7.5 41.5L2 43.6l5.6 2.2z" fill="#8ed86b" stroke="#24561a" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M47 35.5c2.8-6.6 13.2-7.6 15-.6 1.2 4.9-3 8.6-8.4 8.6H47z" fill="#8ed86b" stroke="#24561a" stroke-width="2.2" stroke-linejoin="round"/>
+      <circle cx="55.2" cy="35.2" r="2.5" fill="#16220f"/><circle cx="56.1" cy="34.3" r=".85" fill="#fff"/>
+      <path d="M53 40.4c1.4.9 3.3.9 4.7 0" fill="none" stroke="#24561a" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M7 42.5C7 25 19 14 30 14s23 11 23 28.5z" fill="#3fb54f" stroke="#1b5222" stroke-width="2.6" stroke-linejoin="round"/>
+      <path d="M23.5 17.5l3.6 8.6h6.8l3.6-8.6M27.1 26.1l-6.2 6.4 2.6 9M33.9 26.1l6.2 6.4-2.6 9M20.9 32.5H9.6M40.1 32.5h11.3" fill="none" stroke="#1b5222" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".75"/>
+      <path d="M18 21.5c2.6-2.6 6.1-4.3 9.8-4.6" fill="none" stroke="#b9f5a6" stroke-width="2.4" stroke-linecap="round" opacity=".85"/>
+      <rect x="4.5" y="41" width="51" height="6.2" rx="3.1" fill="#ffd45e" stroke="#8a650c" stroke-width="2"/>
+    </symbol>
+    <symbol id="i-bunny" viewBox="0 0 64 64">
+      <ellipse cx="22.5" cy="16.5" rx="6.6" ry="14.6" transform="rotate(-11 22.5 16.5)" fill="#f6f3ff" stroke="#4d4668" stroke-width="2.3"/>
+      <ellipse cx="22.6" cy="17.6" rx="3" ry="9.8" transform="rotate(-11 22.6 17.6)" fill="#ffadc9"/>
+      <ellipse cx="41.5" cy="16.5" rx="6.6" ry="14.6" transform="rotate(11 41.5 16.5)" fill="#f6f3ff" stroke="#4d4668" stroke-width="2.3"/>
+      <ellipse cx="41.4" cy="17.6" rx="3" ry="9.8" transform="rotate(11 41.4 17.6)" fill="#ffadc9"/>
+      <circle cx="32" cy="41" r="18.4" fill="#f6f3ff" stroke="#4d4668" stroke-width="2.5"/>
+      <circle cx="20.4" cy="46" r="3.6" fill="#ffbdd5" opacity=".9"/><circle cx="43.6" cy="46" r="3.6" fill="#ffbdd5" opacity=".9"/>
+      <circle cx="25" cy="38.4" r="2.8" fill="#1a1630"/><circle cx="39" cy="38.4" r="2.8" fill="#1a1630"/>
+      <circle cx="25.9" cy="37.4" r=".95" fill="#fff"/><circle cx="39.9" cy="37.4" r=".95" fill="#fff"/>
+      <path d="M29.2 44h5.6L32 47.3z" fill="#ff76a6" stroke="#bf3f6b" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M30.4 50.2h3.2v3.4h-3.2z" fill="#fff" stroke="#4d4668" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M32 47.3v2.5m0 0c-1.5 1.9-4.2 1.9-5.3.2m5.3-.2c1.5 1.9 4.2 1.9 5.3.2" fill="none" stroke="#4d4668" stroke-width="1.7" stroke-linecap="round"/>
+      <path d="M13.5 42.6l7.6 1.6M13.8 48.2l7.4-1.2M50.5 42.6l-7.6 1.6M50.2 48.2l-7.4-1.2" stroke="#8f88aa" stroke-width="1.3" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-fox" viewBox="0 0 64 64">
+      <path d="M9 7l17.5 14.5h11L55 7l-2.6 23.6C51.6 45 42.4 55.7 32 58 21.6 55.7 12.4 45 11.6 30.6z" fill="#ff8a2a" stroke="#7d3306" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M13.2 12.6l8.7 8.2-7.4 4.4zM50.8 12.6l-8.7 8.2 7.4 4.4z" fill="#4a2209" opacity=".6"/>
+      <path d="M11.8 31.6c4.8 3.4 10.4 5 14.6 8.6 2.4 5.2 4.1 11.6 5.6 17.8 1.5-6.2 3.2-12.6 5.6-17.8 4.2-3.6 9.8-5.2 14.6-8.6C51 45.4 42 55.8 32 58c-10-2.2-19-12.6-20.2-26.4z" fill="#fff7ee" stroke="#7d3306" stroke-width="2.2" stroke-linejoin="round"/>
+      <ellipse cx="23.6" cy="31.4" rx="2.7" ry="3.2" fill="#1c1206"/><ellipse cx="40.4" cy="31.4" rx="2.7" ry="3.2" fill="#1c1206"/>
+      <circle cx="24.5" cy="30.3" r=".95" fill="#fff"/><circle cx="41.3" cy="30.3" r=".95" fill="#fff"/>
+      <path d="M28.4 50.2h7.2L32 54.4z" fill="#1c1206" stroke="#1c1206" stroke-width="1.4" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-cheetah" viewBox="0 0 64 64">
+      <circle cx="14.6" cy="17" r="7.2" fill="#f2b232" stroke="#6a4100" stroke-width="2.3"/><circle cx="14.6" cy="17" r="3.4" fill="#3b2600"/>
+      <circle cx="49.4" cy="17" r="7.2" fill="#f2b232" stroke="#6a4100" stroke-width="2.3"/><circle cx="49.4" cy="17" r="3.4" fill="#3b2600"/>
+      <ellipse cx="32" cy="35.5" rx="22.4" ry="21" fill="#ffc94a" stroke="#6a4100" stroke-width="2.5"/>
+      <g fill="#3b2600"><circle cx="22" cy="20.5" r="2.1"/><circle cx="31.6" cy="17.6" r="1.9"/><circle cx="41.4" cy="20.5" r="2.1"/><circle cx="13.6" cy="31.5" r="1.9"/><circle cx="50.4" cy="31.5" r="1.9"/><circle cx="16.6" cy="42" r="1.7"/><circle cx="47.4" cy="42" r="1.7"/><circle cx="27" cy="25" r="1.4"/><circle cx="36.6" cy="24.6" r="1.5"/></g>
+      <ellipse cx="32" cy="45.6" rx="11.6" ry="8.8" fill="#fff3d6"/>
+      <path d="M22.6 33.6c-2.1 4.8-2 9.6 1.2 13.6M41.4 33.6c2.1 4.8 2 9.6-1.2 13.6" fill="none" stroke="#2b1b00" stroke-width="2.5" stroke-linecap="round"/>
+      <ellipse cx="24.4" cy="31" rx="3.1" ry="3.3" fill="#2b1b00"/><ellipse cx="39.6" cy="31" rx="3.1" ry="3.3" fill="#2b1b00"/>
+      <circle cx="25.4" cy="29.9" r="1.05" fill="#fff"/><circle cx="40.6" cy="29.9" r="1.05" fill="#fff"/>
+      <path d="M28.8 41.2h6.4L32 44.8z" fill="#2b1b00"/>
+      <path d="M32 44.8v2.6m0 0c-1.6 1.9-4.2 1.9-5.4.3m5.4-.3c1.6 1.9 4.2 1.9 5.4.3" fill="none" stroke="#2b1b00" stroke-width="1.7" stroke-linecap="round"/>
+    </symbol>
     <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 3v18.5" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M6 4h13l-2.4 4L19 12H6z" fill="#fff" stroke="#16203c" stroke-width="1"/><path d="M6 4h3.3v2.7H6zM12.6 4h3.3v2.7h-3.3zM9.3 6.7h3.3v2.6H9.3zM15.9 6.7h2.2l-.6 1.3.9 1.3h-2.5zM6 9.3h3.3V12H6zM12.6 9.3h3.3V12h-3.3z" fill="#16203c"/></symbol>
     <symbol id="i-hand" viewBox="0 0 24 24"><path d="M9.6 3.6a1.7 1.7 0 0 1 3.4 0V11l.6-.1a1.7 1.7 0 0 1 2 1.3l.1.3.6-.1a1.7 1.7 0 0 1 2 1.3l.1.4.4-.05a1.7 1.7 0 0 1 1.9 1.7V18a5 5 0 0 1-5 5h-2.4a5 5 0 0 1-4.1-2.2l-3.9-5a1.75 1.75 0 0 1 2.7-2.25l1.6 1.75z" fill="currentColor"/></symbol>
     <symbol id="i-spring" viewBox="0 0 24 24"><path d="M12 1.4l4.2 4.6h-2.7v2.9h-3V6H7.8z" fill="currentColor"/><path d="M6.6 10.6h10.8M6.6 21.8h10.8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M8 12.5l8 1.5-8 1.6 8 1.6-8 1.6 8 1.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
@@ -411,18 +490,29 @@ h2 {
         <button class="arrow" id="nextLvl" aria-label="Next level"><svg><use href="#i-right"/></svg></button>
       </div>
       <button class="btn go big" id="playBtn"><svg><use href="#i-play"/></svg><span>Play</span></button>
-      <div class="seglabel">Speed</div>
-      <div class="seg" id="speedSeg" role="group" aria-label="Speed">
-        <button data-s="0" aria-pressed="true"><svg><use href="#i-chev1"/></svg><span>Slow</span></button>
-        <button data-s="1" aria-pressed="false"><svg><use href="#i-chev2"/></svg><span>Normal</span></button>
-        <button data-s="2" aria-pressed="false"><svg><use href="#i-chev3"/></svg><span>Zoom</span></button>
+      <div class="seglabel">Who's playing</div>
+      <div class="seg" id="speedSeg" role="group" aria-label="Who's playing">
+        <button data-s="0" aria-pressed="true" aria-label="Ages 3 to 4, gentle"><svg><use href="#i-turtle"/></svg><span>3-4</span></button>
+        <button data-s="1" aria-pressed="false" aria-label="Ages 5 to 6, quick"><svg><use href="#i-bunny"/></svg><span>5-6</span></button>
+        <button data-s="2" aria-pressed="false" aria-label="Ages 7 to 8, fast"><svg><use href="#i-fox"/></svg><span>7-8</span></button>
+        <button data-s="3" aria-pressed="false" aria-label="Ages 9 and up, turbo"><svg><use href="#i-cheetah"/></svg><span>9+</span></button>
       </div>
-      <p class="agehint" id="ageHint">Best for ages 3 to 4</p>
+      <p class="agehint" id="ageHint">Gentle speed for ages 3 to 4</p>
       <div class="row">
         <button class="chip" id="shopBtn"><canvas class="ballicon" id="ballIcon" width="64" height="64"></canvas><span>Balls</span></button>
         <button class="chip" id="soundBtn"><svg><use id="soundIcon" href="#i-sound"/></svg><span id="soundLabel">Sound on</span></button>
         <div class="pill"><svg><use href="#i-star"/></svg><span id="menuStars">0</span></div>
       </div>
+    </div>
+  </section>
+
+  <section class="screen who" id="who" hidden>
+    <header class="whohead"><h2>Who's playing?</h2><p>Tap your age. You can change it later.</p></header>
+    <div class="whogrid" id="whoGrid" role="group" aria-label="Who's playing">
+      <button class="agebtn a0" data-a="0" aria-label="Ages 3 to 4, gentle speed"><svg class="pic"><use href="#i-turtle"/></svg><span class="yrs">3-4</span><span class="word">Gentle</span><svg class="spd"><use href="#i-chev1"/></svg></button>
+      <button class="agebtn a1" data-a="1" aria-label="Ages 5 to 6, quick speed"><svg class="pic"><use href="#i-bunny"/></svg><span class="yrs">5-6</span><span class="word">Quick</span><svg class="spd"><use href="#i-chev2"/></svg></button>
+      <button class="agebtn a2" data-a="2" aria-label="Ages 7 to 8, fast speed"><svg class="pic"><use href="#i-fox"/></svg><span class="yrs">7-8</span><span class="word">Fast</span><svg class="spd"><use href="#i-chev3"/></svg></button>
+      <button class="agebtn a3" data-a="3" aria-label="Ages 9 and up, turbo speed"><svg class="pic"><use href="#i-cheetah"/></svg><span class="yrs">9+</span><span class="word">Turbo</span><svg class="spd"><use href="#i-chev4"/></svg></button>
     </div>
   </section>
 
@@ -488,9 +578,29 @@ h2 {
 
   // ---------- Saved progress (this device only) ----------
   const SAVE_KEY = 'selenaRoller.v1';
-  let save = { stars: 0, best: 1, level: 1, skin: 'selena', owned: ['selena'], speed: 0, muted: false, hinted: false };
+  // speed: who is playing, 0 ages 3-4, 1 ages 5-6, 2 ages 7-8, 3 ages 9+ (older saves used 0 Slow, 1 Normal, 2 Zoom: the same
+  // numbers now mean the matching ages). agePicked: the Who's playing picker has been answered on this device.
+  let save = { stars: 0, best: 1, level: 1, skin: 'selena', owned: ['selena'], speed: 0, agePicked: false, muted: false, hinted: false };
   try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && typeof s === 'object') save = Object.assign(save, s); } catch (e) {}
   const persist = () => { if (headless) return; try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} };
+
+  // ---------- Who is playing: four age choices that set the speed, the steering and how tough the new pieces are ----------
+  // v1: speed on level 1 in metres a second. Each older choice gains 3% a level until it is 50% faster than on level 1
+  // (level 18), then holds. Ages 3 to 4 keep the original Slow speed exactly (0.8 of each level's base speed).
+  // tau: steering smoothing (s), cap: sideways speed limit (times the level's), dead: finger dead zone (px),
+  // sens: metres of steering for one screen width, accel: how fast the ball picks up speed, rollIn: start-up time (s),
+  // help: falls in one section before the helping hand adds rails, a Bubble Shield, then a Fly bubble, c: how tough the new pieces are.
+  const AGES = [
+    { range: '3-4', word: 'Gentle', hint: 'Gentle speed for ages 3 to 4', v1: 0, tau: 0.085, cap: 1.15, dead: 4, sens: 8, accel: 2.3, rollIn: 0.6, help: [1, 2, 3], c: 0 },
+    { range: '5-6', word: 'Quick', hint: 'Quick speed for ages 5 to 6', v1: 4.6, tau: 0.07, cap: 1.45, dead: 3, sens: 8.5, accel: 2.8, rollIn: 0.5, help: [2, 3, 4], c: 0.35 },
+    { range: '7-8', word: 'Fast', hint: 'Fast speed for ages 7 to 8', v1: 5.6, tau: 0.06, cap: 1.7, dead: 2, sens: 9, accel: 3.2, rollIn: 0.45, help: [3, 4, 5], c: 0.7 },
+    { range: '9+', word: 'Turbo', hint: 'Turbo speed for ages 9 and up', v1: 6.6, tau: 0.05, cap: 1.95, dead: 2, sens: 9.5, accel: 3.6, rollIn: 0.4, help: [3, 4, 5], c: 1 }
+  ];
+  const ageOf = () => clamp(save.speed | 0, 0, 3);
+  function ageSpeed(age, n, base) {
+    if (!age) return 0.8 * base;
+    return AGES[age].v1 * (1 + Math.min(0.5, 0.03 * (n - 1))) * (n > 30 ? 1 + Math.min(0.045, 0.00225 * (n - 30)) : 1);
+  }
 
   // ---------- Sound (made on the fly, started by the first tap) ----------
   let actx = null, master = null, noiseBuf = null, roll = null;
@@ -605,6 +715,8 @@ h2 {
     $('menu').innerHTML = '<div class="panel center nogl"><h2>3D is switched off</h2><p>This browser could not start 3D graphics. Try opening the link in Chrome or Safari.</p></div>';
     return;
   }
+  // The first start shows Who's playing straight away, before the menu (start-up may still be waiting for the web font).
+  if (!save.agePicked) { $('menu').hidden = true; $('who').hidden = false; }
   // Phones and tablets draw at up to 1.75x (about a quarter fewer pixels than 2x, so less heat); the governor below can lower it further.
   const COARSE = (() => { try { return window.matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } })();
   const DPR_MAX = Math.min(window.devicePixelRatio || 1, COARSE ? 1.75 : 2);
@@ -1701,10 +1813,8 @@ h2 {
     const t = [0.8, 0.75, 0.7, 0.65, 0.65, 0.6, 0.55, 0.5, 0.5, 0.5, 0.45, 0.4, 0.4, 0.35, 0.35, 0.3, 0.25, 0.25, 0.2, 0.2, 0.15, 0.15];
     return n - 6 < t.length ? t[n - 6] : 0.1;
   }
-  const AGE_MULT = [0.8, 1, 1.2];        // Slow (ages 3-4), Normal (5-6), Zoom (7-9)
-  const HELP_AT = [[1, 2, 3], [2, 3, 4], [3, 4, 5]];
-  function levelParams(n) {
-    const P = { n }, x = Math.max(0, n - 30);
+  function levelParams(n, age) {
+    const P = { n, age: age | 0 }, x = Math.max(0, n - 30);
     if (n <= 30) {
       const t = TABLE[n - 1];
       P.len = t[0]; P.width = t[1]; P.amp = t[2]; P.density = t[3]; P.obsMult = t[4]; P.cpEvery = t[5]; P.speed = 4.0 + 0.1 * (n - 1);
@@ -1732,13 +1842,18 @@ h2 {
       P.featured = [];
       while (P.featured.length < 3) { const k = pool[Math.floor(fr() * pool.length)]; if (P.featured.indexOf(k) < 0) P.featured.push(k); }
     }
+    // P.speed is the level's base speed: obstacle clocks and spacing are tied to the distance rolled at this speed, so they
+    // look and time the same at every age. P.vel is how fast the ball really rolls for the age choice.
+    P.vel = ageSpeed(P.age, n, P.speed);
+    P.ratio = P.vel / P.speed;
     P.corr = n <= 5 ? 3.0 : n <= 10 ? 2.5 : n <= 20 ? 2.2 : n <= 30 ? 2.0 : 1.8;
     P.decision = n <= 10 ? 3.0 : n <= 20 ? 2.2 : 1.5;
     P.steerCap = n <= 10 ? 3.0 : n <= 20 ? 4.0 : n <= 30 ? 5.0 : 5.5;
     P.wavelength = n <= 10 ? 24 : 20;
-    P.railPct = railShare(n);
-    P.autoCentre = n <= 5 ? 1 : n <= 10 ? 2 : n <= 15 ? 3 : 0;
-    P.edgeNudge = n >= 16 && n <= 20;
+    // older children lose the safe rails a few levels sooner, and get no auto-centring or edge nudge (it would fight their steering)
+    P.railPct = railShare(n + [0, 0, 2, 4][P.age]);
+    P.autoCentre = P.age >= 3 ? 0 : P.age === 2 ? (n <= 5 ? 2 : 0) : n <= 5 ? 1 : n <= 10 ? 2 : n <= 15 ? 3 : 0;
+    P.edgeNudge = P.age <= 1 && n >= 16 && n <= 20;
     P.forgive = n <= 10 ? [0.4, 0.5] : n <= 20 ? [0.3, 0.4] : n <= 30 ? [0.2, 0.3] : [0.15, 0.25];
     P.follow = n <= 10 ? 1 : n <= 20 ? 0.75 : 0.5;
     P.meter = n <= 5 ? 8 : n <= 10 ? 12 : n <= 20 ? 15 : n <= 30 ? 20 : 24;
@@ -1836,20 +1951,111 @@ h2 {
     return { body: 3, dec: 1, risk: 0 };
   }
 
-  // ---------- Level generator: seeded by the level number, so a level is the same every time ----------
+  // ---------- Terrain pieces: climbs, downhill runs, sharp bends, island hops and narrow ramp jump-offs ----------
+  // Each piece has its own first level, where it comes in a gentle form with rails. After that it grows with the level and
+  // with the age choice (c: 0 for ages 3-4 up to 1 for ages 9+): steeper, sharper, narrower, more islands, longer gaps.
+  const FEAT_INTRO = { UP: 2, DN: 3, TN: 6, IS: 10, RJ: 20 };
+  const FEATS = Object.keys(FEAT_INTRO);
+  function featCount(n, age) {
+    if (n < 2) return 0;
+    const k = [n < 10 ? 1 : 2, n < 6 ? 1 : n < 16 ? 2 : 3, n < 5 ? 1 : n < 12 ? 2 : n < 22 ? 3 : 4, n < 4 ? 1 : n < 9 ? 2 : n < 16 ? 3 : n < 24 ? 4 : 5][age];
+    return k + (age > 0 && n % 5 === 0 && n !== 30 ? 1 : 0);
+  }
+  function planFeatures(P, rf) {
+    const n = P.n, age = P.age, out = [];
+    const open = FEATS.filter(t => FEAT_INTRO[t] <= n);
+    if (!open.length) return out;
+    let want = featCount(n, age);
+    const types = FEATS.filter(t => FEAT_INTRO[t] === n);   // the level's new piece comes first
+    if (P.grand) { for (const t of FEATS) if (types.indexOf(t) < 0) types.push(t); want = Math.max(want, FEATS.length); }
+    const per = {}, wt = t => 1 + 0.12 * FEAT_INTRO[t];
+    for (const t of types) per[t] = (per[t] || 0) + 1;
+    while (types.length < want) {
+      const last = types[types.length - 1];
+      const pool = open.filter(t => t !== last && (per[t] || 0) < ((t === 'IS' || t === 'RJ') && !age ? 1 : 2));
+      if (!pool.length) break;
+      let tot = 0; for (const t of pool) tot += wt(t);
+      let v = rf() * tot, pick = pool[pool.length - 1];
+      for (const t of pool) { v -= wt(t); if (v <= 0) { pick = t; break; } }
+      types.push(pick); per[pick] = (per[pick] || 0) + 1;
+    }
+    const seen = {};
+    for (const t of types) { out.push(featSpec(t, P, rf, FEAT_INTRO[t] === n && !seen[t])); seen[t] = 1; }
+    return out;
+  }
+  // Size and toughness of one piece. t: how far the level is past the piece's first level (0 to 1 at level 30).
+  function featSpec(type, P, rf, first) {
+    const n = P.n, c = AGES[P.age].c, t = clamp((n - FEAT_INTRO[type]) / Math.max(1, 30 - FEAT_INTRO[type]), 0, 1), g = first ? 0 : 1;
+    const F = { type, first, c, t, risk: 1 };
+    // rails: always on a piece's first level, always for ages 3-4, up to level 15 for ages 5-6
+    F.rails = first || P.age === 0 || (P.age === 1 && n <= 15);
+    switch (type) {
+      case 'UP': case 'DN': {
+        const up = type === 'UP';
+        F.len = Math.round(lerp(up ? 10 : 11, up ? 8 : 9, c)) + (first ? 2 : 0);
+        const grade = Math.min(up ? 0.25 : 0.28, lerp(up ? 0.07 : 0.09, up ? 0.17 : 0.21, c) + g * t * 0.07);
+        F.h = +(grade * F.len * L).toFixed(2);
+        F.narrowW = !F.rails && c * t > 0.3 ? +Math.max(2.8, P.width - 0.8 * c * t).toFixed(2) : 0;
+        F.shift = !up && !first && c >= 0.5 && t > 0.2 ? (rf() < 0.5 ? -1 : 1) * lerp(1.6, 3.2, t) : 0;
+        F.fol = lerp(1, 0.6, c);
+        F.body = F.len + 4;
+        F.risk = F.rails ? 0 : 1;
+        break;
+      }
+      case 'TN': {
+        F.len = Math.max(5, Math.round(lerp(9, 6, c)) + (first ? 2 : 0) - Math.round(1.5 * t * g));
+        F.d = lerp(2.4, 5.4, c) * (first ? 0.65 : 0.75 + 0.25 * t);
+        F.parts = !first && c >= 0.6 && t > 0.3 && rf() < 0.6 ? 2 : 1;
+        F.widen = P.age === 0 ? 0.7 : first ? 0.4 : 0;
+        F.narrowW = !F.rails && c * t > 0.5 ? +Math.max(2.9, P.width - 0.5).toFixed(2) : 0;
+        F.fol = first ? Math.max(0.85, lerp(1, 0.5, c)) : lerp(1, 0.42, c);
+        F.kb = lerp(1.2, 0.55, c);
+        F.body = 1 + F.len * F.parts + 2;
+        F.risk = F.rails ? 0 : 1;
+        break;
+      }
+      case 'IS': {
+        F.k = first ? 1 : clamp(1 + Math.floor(t * lerp(1.2, 3.2, c) + rf() * 0.9), 1, Math.round(lerp(2, 4, c)));
+        F.li = first || c < 0.5 ? 2 : (rf() < 0.35 + 0.4 * c ? 1 : 2);
+        F.gaps = [];
+        for (let q = 0; q <= F.k; q++) F.gaps.push(first ? 1 : clamp(1 + (rf() < c * (0.4 + 0.6 * t) ? 1 : 0) + (c > 0.9 && t > 0.6 && rf() < 0.4 ? 1 : 0), 1, 3));
+        F.w = +Math.max(1.9, lerp(3.8, 2.6, c) - 0.5 * t * g).toFixed(2);
+        F.zig = first ? 0 : lerp(0, 1.3, c) * (0.5 + 0.5 * t);
+        F.fol = first ? 1 : lerp(1, 0.4, c);
+        F.railsI = P.age === 0 || first;
+        F.body = 2 + F.gaps.reduce((a, b) => a + b, 0) + F.k * F.li + 4;
+        break;
+      }
+      case 'RJ': {
+        F.lr = Math.round(lerp(4, 6, c));
+        F.h = +(lerp(1.0, 2.2, c) + 0.4 * t * g).toFixed(2);
+        F.w = +Math.max(1.8, lerp(3.0, 1.95, c) - 0.2 * t * g).toFixed(2);
+        F.g = Math.round(lerp(1, 2.6, c) + 0.5 * t * g);
+        F.body = 2 + F.lr + F.g + 4;
+        break;
+      }
+    }
+    return F;
+  }
+
+  // ---------- Level generator: seeded by the level number and the age choice, so a level is the same every time ----------
   const TEACH_RAILS = { BS: 1, RS: 1, SL: 1, SS: 1, HH: 1, HF: 1, SC: 1, BO: 1 };
-  function genLevel(n) {
-    const P = levelParams(n), r = rng(n * 7919 + 13);
-    const N = P.len, NS = N * SUB, wBase = P.width;
+  function genLevel(n, age) {
+    const P = levelParams(n, age), r = rng(n * 7919 + 13), rf = rng(n * 104729 + P.age * 7717 + 3);
+    const feats = planFeatures(P, rf);
+    let featBudget = 0; for (const F of feats) featBudget += F.body + 6;
+    const N = P.len + featBudget, NS = N * SUB, wBase = P.width;
     const lv = {
       n, P, N, NS, world: worldFor(n),
       cx: new Float32Array(NS + 1), y: new Float32Array(NS + 1), w: new Float32Array(NS + 1), safe: new Float32Array(NS + 1),
+      bank: new Float32Array(NS + 1), fol: new Float32Array(NS + 1).fill(P.follow), spd: new Float32Array(NS + 1).fill(1),
       gap: new Uint8Array(N), kind: new Uint8Array(N), bridge: new Uint8Array(N), railL: new Uint8Array(N), railR: new Uint8Array(N),
-      noHop: new Uint8Array(N), hopOK: new Uint8Array(N), landOK: new Uint8Array(N), section: new Uint8Array(N),
-      obstacles: [], launches: [], platforms: [], stars: [], pickups: [], cps: [0], chal: [], finish: N - 6, introStep: -1, introEnd: -1, firstOpen: -1
+      noHop: new Uint8Array(N), hopOK: new Uint8Array(N), landOK: new Uint8Array(N), section: new Uint8Array(N), feat: new Uint8Array(N),
+      obstacles: [], launches: [], platforms: [], stars: [], pickups: [], cps: [0], chal: [], finish: N - 6, introStep: -1, introEnd: -1, firstOpen: -1,
+      fIntroStep: -1, fIntroEnd: -1, banked: false
     };
-    const straight = new Uint8Array(N), halfC = new Uint8Array(N), force = new Uint8Array(N), rank = new Uint8Array(N), busy = new Uint8Array(N);
-    const wAddN = new Float32Array(NS + 1), wNarN = new Float32Array(NS + 1), yAdd = new Float32Array(NS + 1);
+    const straight = new Uint8Array(N), halfC = new Uint8Array(N), force = new Uint8Array(N), rank = new Uint8Array(N), busy = new Uint8Array(N), flatSpd = new Uint8Array(N);
+    const wAddN = new Float32Array(NS + 1), wNarN = new Float32Array(NS + 1), yAdd = new Float32Array(NS + 1), cxAdd = new Float32Array(NS + 1), bankK = new Float32Array(NS + 1);
     const keys = [], chStars = [];
     const range = (a, b, fn) => { for (let i = Math.max(0, a); i <= Math.min(N - 1, b); i++) fn(i); };
     const straightR = (a, b) => range(a, b, i => { straight[i] = 1; });
@@ -1883,6 +2089,13 @@ h2 {
       lv.cps.push(at); lv.kind[at] = 3;
       straightR(at - 2, at + 2); forceR(at - 1, at + 1, 1); busyR(at - 1, at + 1);
     }
+    // A sideways move of the whole track by d metres between steps a and b (smootherstep, so the bend and its banking
+    // start and end softly), and per-node marks for the pieces.
+    function shift(a, b, d) { const A = a * SUB, B = b * SUB; for (let k = A; k <= NS; k++) { const u = k >= B ? 1 : (k - A) / (B - A); cxAdd[k] += d * u * u * u * (u * (u * 6 - 15) + 10); } }
+    const folR = (a, b, v) => { for (let k = Math.max(0, a * SUB); k <= Math.min(NS, b * SUB); k++) lv.fol[k] = v; };   // a bend's own steering share
+    const bankR = (a, b, kb) => { for (let k = Math.max(0, a * SUB); k <= Math.min(NS, b * SUB); k++) bankK[k] = Math.max(bankK[k], kb); };
+    const featR = (a, b, m) => range(a, b, i => { lv.feat[i] = m; });
+    const flatSpdR = (a, b) => range(a, b, i => { flatSpd[i] = 1; });
 
     // One challenge with its body starting at step s0.
     function place(type, s0, f, intro, curveOK, hint) {
@@ -1905,7 +2118,7 @@ h2 {
         }
         case 'RS': {
           if (r() < 0.65) {
-            hump(s0, s0 + 4, 0.42);
+            hump(s0, s0 + 4, 0.42); flatSpdR(s0, s0 + 4);
             lv.launches.push({ kind: 'hop', step: s0 + 2, sTrig: (s0 + 2) * L, sLand: (s0 + 3.6) * L, H: 0.45, half: 99 });
             starLine(s0, 2, 1, 0); chStars.push({ s: (s0 + 2.8) * L, lat: 0, dy: 1.15 }); starLine(s0 + 4, 2, 1, 0);
           } else { slope(s0, s0 + 5, -1.2); starLine(s0, 5, 1.1, 0); }
@@ -1938,9 +2151,9 @@ h2 {
             if (P.funnel) forceR(s0 - 3, s0 + 2, 1); else { forceR(s0 - 3, s0 - 1, 1); forceR(s0, s0 + 2, 2); }
           } else if (type === 'BRJ') {
             lv.kind[s0] = 2; forceR(s0 - 3, s0 + 5, 1);
-            rampUp(s0 + 4, s0 + 6, 0.7); take = s0 + 5; lv.kind[take] = 7;
+            rampUp(s0 + 4, s0 + 6, 0.7); take = s0 + 5; lv.kind[take] = 7; flatSpdR(s0 + 4, s0 + 6);
           } else if (type === 'RG') {
-            rampUp(s0, s0 + 2, 0.7); take = s0 + 1; lv.kind[take] = 7; forceR(s0 - 3, s0 + 1, 1);
+            rampUp(s0, s0 + 2, 0.7); take = s0 + 1; lv.kind[take] = 7; forceR(s0 - 3, s0 + 1, 1); flatSpdR(s0, s0 + 2);
           } else forceR(s0 - 3, s0, 1);
           if (pad) lv.kind[take] = 1;
           const g0 = take + 1, land0 = g0 + g;
@@ -2012,30 +2225,143 @@ h2 {
       return Math.sign(safeOut);
     }
 
-    // Place the challenge units with calm stretches, decision spacing and checkpoints.
-    const units = planUnits(P, Math.round(N * L / 100 * P.density), r);
-    const START = 9, finish = lv.finish, limit = finish - 3;
+    // One terrain piece with its body starting at step s0. A piece is a run of its own, with no obstacles on it,
+    // and the star trail runs down its middle.
+    function feature(F, s0) {
+      const end = s0 + F.body - 1, railMode = F.rails ? 1 : 2;
+      const landW = wBase + (P.age === 0 ? 1.5 : P.age === 1 ? 0.8 : 0);
+      lv.chal.push({ type: F.type, s0, body: F.body, feat: 1 });
+      if (F.first && lv.fIntroStep < 0) { lv.fIntroStep = s0; lv.fIntroEnd = end; }
+      busyR(s0, end); rankR(s0, end);
+      switch (F.type) {
+        case 'UP': case 'DN': {
+          // climb or run down; the direction flips if the course would leave its comfortable height band
+          let up = F.type === 'UP';
+          const here = yAdd[s0 * SUB];
+          if (up && here > 5) up = false; else if (!up && here < -12) up = true;
+          F.dirUp = up;
+          const a = s0 + 1, b = a + F.len;
+          slope(a, b, up ? F.h : -F.h);
+          if (F.narrowW) narrow(a, b - 1, F.narrowW, 1.5, 1.5);
+          if (F.shift) { shift(a + 1, b - 1, F.shift); folR(a + 1, b - 1, F.fol); bankR(a + 1, b - 1, 0.6); }
+          straightR(s0 - 2, end + 2); forceR(s0, end, railMode); noHopR(s0, end); featR(a, b, 1);
+          key(s0, end + 1, 0); starLine(a + 0.4, Math.max(3, Math.floor(F.len / 1.3)), 1.3, 0);
+          break;
+        }
+        case 'TN': {
+          // a sharp sideways bend (two in a zig-zag for older children), banked, with its own steering share
+          let dir = rf() < 0.5 ? 1 : -1;
+          const here = cxAdd[s0 * SUB];
+          if (Math.abs(here) > 4) dir = here > 0 ? -1 : 1;   // bend back towards the middle when the course has wandered
+          const a = s0 + 1;
+          let s = a;
+          for (let q = 0; q < F.parts; q++) { shift(s, s + F.len, dir * F.d * (q ? -1 : 1)); s += F.len; }
+          if (F.widen) widen(a, s - 1, F.widen, 1); else if (F.narrowW) narrow(a, s - 1, F.narrowW, 1, 1);
+          straightR(s0 - 2, end + 2); forceR(s0, end, railMode); noHopR(s0, end);
+          folR(a, s, F.fol); bankR(a, s, F.kb); featR(a, s, 2);
+          key(s0, end + 1, 0); starLine(a + 0.3, Math.max(3, Math.floor((s - a) / 1.15)), 1.15, 0);
+          break;
+        }
+        case 'IS': {
+          // stepping stones: a pad on the deck, then small islands with a pad each, then a wide landing deck.
+          // Older children zig-zag between the islands and steer in the air (fol < 1); a soft pull helps near misses land.
+          let p = s0 + 1, off = 0, side = rf() < 0.5 ? 1 : -1;
+          lv.kind[p] = 1; forceR(s0, p, railMode);
+          for (let q = 0; q <= F.k; q++) {
+            const g = F.gaps[q], g0 = p + 1, isl = g0 + g, last = q === F.k;
+            for (let k = 0; k < g; k++) lv.gap[g0 + k] = 1;
+            drop(g0, last ? -0.5 : (rf() < 0.5 ? -0.35 : 0.25));
+            const want = last ? 0 : side * F.zig;
+            if (Math.abs(want - off) > 0.01) shift(g0, isl, want - off);
+            off = want; side = -side;
+            lv.launches.push({ kind: 'pad', step: p, sTrig: q === 0 ? p * L + 0.15 : p * L + (F.li === 1 ? 1.3 : 0.9), sLand: last ? (isl + 2) * L : isl * L + (F.li === 1 ? 0.7 : 1.0), H: 1.25 + 0.25 * g, half: q === 0 ? 99 : F.w / 2, gapSteps: g, stone: true, fol: F.fol, landHalf: last ? 9 : F.w / 2 });
+            if (!last) {
+              const i2 = isl + F.li - 1;
+              narrow(isl, i2, F.w, 0, 0);
+              lv.kind[i2] = 1; forceR(isl, i2, F.railsI ? 1 : 2); featR(isl, i2, 3);
+              p = i2;
+            } else {
+              forceR(isl, isl + 3, P.landRail || F.rails ? 1 : 0);
+              if (landW > wBase) widen(isl, isl + 3, landW - wBase, 1);
+            }
+          }
+          straightR(s0 - 3, end + 2); noHopR(s0 - 2, end - 3);
+          key(s0 - 2, end + 1, 0); starLine(end - 2.5, 3, 1, 0);
+          break;
+        }
+        case 'RJ': {
+          // a narrow ramp that climbs to a lip, a jump off its end, and a landing further down
+          const a = s0 + 2, b = a + F.lr - 1, g0 = b + 1, land0 = g0 + F.g;
+          narrow(a, b, F.w, 2, 0);
+          for (let k = a; k <= b; k++) lv.bridge[k] = 1;
+          rampUp(a, b + 1, F.h); lv.kind[b] = 7;
+          for (let k = 0; k < F.g; k++) lv.gap[g0 + k] = 1;
+          drop(g0, -(1.2 + 0.5 * F.h));
+          lv.launches.push({ kind: 'ramp', step: b, sTrig: (b + 1) * L - 0.25, sLand: (land0 + 2) * L, H: 1.7 + 0.25 * F.g, half: 99, gapSteps: F.g });
+          forceR(s0, b, railMode); forceR(land0, land0 + 3, P.landRail || F.rails ? 1 : 0);
+          if (landW > wBase) widen(land0, land0 + 3, landW - wBase, 1);
+          straightR(s0 - 3, end + 2); noHopR(s0 - 2, land0); featR(a, b, 4);
+          key(s0 - 2, end + 1, 0); starLine(a + 0.4, F.lr, 1, 0); starLine(land0 + 1, 3, 1, 0);
+          break;
+        }
+      }
+    }
+
+    // Place the challenge units with calm stretches, decision spacing and checkpoints. The terrain pieces go in between,
+    // spread through the level, in steps added to the level's length for them (featBudget).
+    const units = planUnits(P, Math.round(P.len * L / 100 * P.density), r);
+    const START = 9, finish = lv.finish, limit = finish - 3, obsSpan = Math.max(0, limit - START - featBudget);
     const minSpace = Math.ceil(P.decision * P.speed / L);
     let total = 0; for (const u of units) total += u.length;
-    const spacing = total ? Math.max(minSpace, (limit - START) / total) : 0;
-    let cur = START, lastCp = 0, lastDec = -99, beat = 0, beatLen = 2 + (r() < 0.5 ? 1 : 0), placed = 0;
+    const spacing = total ? Math.max(minSpace, obsSpan / total) : 0;
+    // featLeft: steps still kept for the pieces to come, so a busy level drops an obstacle unit rather than a piece
+    let cur = START, lastCp = 0, lastDec = -99, beat = 0, beatLen = 2 + (r() < 0.5 ? 1 : 0), placed = 0, featUsed = 0, obsDone = 0, featLeft = featBudget;
     let carry = 0, carryEnd = -99;   // a close neighbour keeps the safe side, so the star line never swaps lanes in a second
     let introDone = !P.intro || P.intro === 'CURVE', curveIntroDone = P.intro !== 'CURVE';
     const curveOn = P.allowed.indexOf('CURVE') >= 0;
-    for (let ui = 0; ui < units.length; ui++) {
-      const u = units[ui], fps = u.map(t => footprint(t, P, r));
+    const order = [];
+    {
+      // a piece's place in the level (0 start, 1 end): a level's new piece comes early, the others spread out; a piece never
+      // comes before the level's first obstacle unit, which may be the lesson
+      const fr = feats.map((F, j) => ({ F, f: F.first ? 0.2 : (j + 0.6) / feats.length })).sort((a, b) => a.f - b.f);
+      let fi = 0;
+      for (let i = 0; i < units.length; i++) {
+        while (i > 0 && fi < fr.length && fr[fi].f <= i / units.length) order.push(fr[fi++]);
+        order.push(units[i]);
+      }
+      while (fi < fr.length) order.push(fr[fi++]);
+    }
+    for (let ui = 0; ui < order.length; ui++) {
+      if (order[ui].F) {
+        const F = order[ui].F, span = F.body, ideal = START + Math.round(order[ui].f * obsSpan) + featUsed;
+        featLeft -= span + 6;
+        const fRoom = limit - featLeft;
+        if (cur < ideal) cur = Math.max(cur, Math.min(ideal, fRoom - span - 6));
+        // a checkpoint right before a piece that can drop the ball or would make the section long, so a fall replays little
+        if ((F.first || cur + span + 3 - lastCp > P.cpEvery - 2 || (F.risk && cur - lastCp > P.cpEvery * 0.45)) && cur - lastCp >= 7 && cur + 3 + span + 3 <= fRoom) {
+          checkpoint(cur + 1); lastCp = cur + 1; cur += 3;
+        }
+        if (cur + span + 3 > fRoom) continue;
+        feature(F, cur);
+        lastDec = cur + span; carryEnd = -99;
+        cur += span + 3; featUsed += span + 6;
+        continue;
+      }
+      const room = featLeft > 0 ? limit - featLeft - 6 : limit;   // 6: the longest calm pause a unit can leave behind it
+      const u = order[ui], fps = u.map(t => footprint(t, P, r));
       const sp = Math.ceil((u.length === 3 ? 1.8 : 2.0) * P.speed / L);
       let span = 0;
       for (let i = 0; i < u.length; i++) span += i < u.length - 1 ? Math.max(fps[i].body + 1, sp) : fps[i].body;
-      const isIntro = !introDone && ui === 0;
+      const isIntro = !introDone && obsDone === 0;
+      obsDone++;
       const risk = fps.some(f => f.risk);
       // a checkpoint before the unit whenever the section would grow past its length; a unit that leaves no room for it is dropped
       if ((isIntro || cur + span + 3 - lastCp > P.cpEvery - 2 || (risk && cur - lastCp > P.cpEvery * 0.55)) && cur - lastCp >= 7) {
-        if (cur + 3 + span + 3 > limit) break;
+        if (cur + 3 + span + 3 > room) continue;
         checkpoint(cur + 1); lastCp = cur + 1; cur += 3;
       }
       if (cur + fps[0].dec - lastDec < minSpace) cur = lastDec + minSpace - fps[0].dec;
-      if (cur + span + 3 > limit) break;
+      if (cur + span + 3 > room) continue;
       let s = cur, hint = (cur - carryEnd <= 10) ? carry : 0;
       for (let i = 0; i < u.length; i++) {
         const t = u[i];
@@ -2051,8 +2377,8 @@ h2 {
       if (isIntro) { introDone = true; lv.introStep = cur; lv.introEnd = s; }
       cur = s + 3; beat += u.length; placed += u.length;
       if (beat >= beatLen || u.length > 1) { cur += u.length === 3 ? 6 : 3 + Math.floor(r() * 3); beat = 0; beatLen = 2 + (r() < 0.5 ? 1 : 0); }
-      const ideal = START + Math.round(placed * spacing);
-      if (cur < ideal) cur = ideal;
+      const ideal = START + Math.round(placed * spacing) + featUsed;
+      if (cur < ideal) cur = featLeft > 0 ? Math.max(cur, Math.min(ideal, room)) : ideal;
     }
     // Start line (just ahead of where the ball waits), finish run-out, and checkpoints through the calm stretches.
     lv.kind[4] = 4; lv.kind[finish] = 4;
@@ -2071,7 +2397,7 @@ h2 {
 
     // Widths.
     for (let k = 0; k <= NS; k++) lv.w[k] = (wNarN[k] || wBase) + wAddN[k];
-    // Gentle downhill (or uphill when low) slopes in long calm stretches. Slopes never change speed.
+    // Gentle downhill (or uphill when low) slopes in long calm stretches.
     {
       let i = 10, lastSlope = -99;
       while (i < finish - 10) {
@@ -2085,6 +2411,21 @@ h2 {
       }
     }
     for (let k = 0; k <= NS; k++) lv.y[k] = yAdd[k];
+    // Hills change the speed: a little slower going up, a little faster going down (capped by age). Hop humps and kicker
+    // ramps keep their speed, so a jump never starts slow.
+    {
+      const upMin = [0.86, 0.83, 0.79, 0.76][P.age], dnMax = [1.12, 1.18, 1.24, 1.3][P.age];
+      for (let k = 0; k <= NS; k++) {
+        const i = Math.min(N - 1, Math.floor(k / SUB));
+        if (lv.gap[i] || flatSpd[i] || lv.kind[i] === 7) continue;
+        const a = Math.max(0, k - 1);
+        let b = Math.min(NS, k + 1);
+        if (lv.gap[Math.min(N - 1, Math.floor(b / SUB))]) b = k;   // never measure across the drop into a gap
+        if (b === a) continue;
+        const gr = (lv.y[b] - lv.y[a]) / ((b - a) * DS);
+        lv.spd[k] = gr > 0 ? Math.max(upMin, 1 - 1.1 * Math.max(0, gr - 0.03)) : Math.min(dnMax, 1 + 1.2 * Math.max(0, -gr - 0.03));
+      }
+    }
     // Curves: a smooth S-shape that pauses through every straight zone.
     {
       const vMax = P.speed * 1.2, lam = Math.max(P.wavelength * L, 1.3 * 4 * Math.PI * P.amp * vMax / P.steerCap);
@@ -2100,7 +2441,14 @@ h2 {
         phi += rate[k] * DS;
         if (k >= 8 * SUB) rampD += rate[k] * DS;   // the curves ease in only where the track may curve, never inside a straight zone
         const sh = (0.75 * Math.sin(TAU * phi / lam + p1) + 0.25 * Math.sin(TAU * phi / (lam * 0.47) + p2)) / norm;
-        lv.cx[k] = P.amp * env[k] * sh * smooth(rampD / (8 * L));
+        lv.cx[k] = P.amp * env[k] * sh * smooth(rampD / (8 * L)) + cxAdd[k];
+      }
+      // Banked bends: the outer side rises with the bend's curvature (only on the pieces that ask for it).
+      for (let k = 1; k < NS; k++) {
+        if (!bankK[k]) continue;
+        const c2 = (cxAdd[k + 1] - 2 * cxAdd[k] + cxAdd[k - 1]) / (DS * DS);
+        lv.bank[k] = clamp(-bankK[k] * c2 * 3.2, -0.22, 0.22);
+        if (lv.bank[k]) lv.banked = true;
       }
       for (let i = 1; i < N - 1; i++) {
         if (rank[i]) continue;
@@ -2180,7 +2528,8 @@ h2 {
     for (const st of chStars) {
       const i = clamp(Math.floor(st.s / L), 0, N - 1);
       if (lv.gap[i] || st.s >= finish * L) continue;
-      addStar(st.s, latLimit(st.s, sampleArr(lv.safe, st.s)), sampleArr(lv.y, st.s) + st.dy, false);
+      const lat = latLimit(st.s, sampleArr(lv.safe, st.s));
+      addStar(st.s, lat, sampleArr(lv.y, st.s) + sampleArr(lv.bank, st.s) * lat + st.dy, false);
     }
     for (const ln of lv.launches) {
       if (ln.kind === 'hop') continue;
@@ -2197,7 +2546,7 @@ h2 {
         while (left > 0) {
           const cnt = Math.min(left, 5 + Math.floor(r() * 3), Math.floor((j - 0.4 - s) / 1.2) + 1);
           if (cnt < 3) break;
-          for (let k = 0; k < cnt; k++) { const ss = (s + k * 1.2) * L; addStar(ss, latLimit(ss, sampleArr(lv.safe, ss)), sampleArr(lv.y, ss) + 0.9, false); }
+          for (let k = 0; k < cnt; k++) { const ss = (s + k * 1.2) * L, lat = latLimit(ss, sampleArr(lv.safe, ss)); addStar(ss, lat, sampleArr(lv.y, ss) + sampleArr(lv.bank, ss) * lat + 0.9, false); }
           left -= cnt; s += cnt * 1.2 + 2.5 + r() * 2;
         }
         i = j + 1;
@@ -2213,7 +2562,8 @@ h2 {
       const solid = new Uint8Array(N);
       for (let i = 0; i < N; i++) {
         const k = i * SUB, flat = Math.abs(lv.y[k + SUB] - lv.y[k]) < 0.25;
-        solid[i] = (!lv.gap[i] && lv.kind[i] !== 6 && lv.kind[i] !== 1 && lv.kind[i] !== 7 && !lv.bridge[i] && lv.w[k] >= wBase - 0.05 && lv.w[k + SUB] >= wBase - 0.05 && !obsStep[i] && flat) ? 1 : 0;
+        // terrain pieces (hills, bends, islands, ramps) are never a Super Jump or Fly landing: helpers land on flat open deck
+        solid[i] = (!lv.gap[i] && !lv.feat[i] && lv.kind[i] !== 6 && lv.kind[i] !== 1 && lv.kind[i] !== 7 && !lv.bridge[i] && lv.w[k] >= wBase - 0.05 && lv.w[k + SUB] >= wBase - 0.05 && !obsStep[i] && flat) ? 1 : 0;
       }
       for (let i = 0; i < N; i++) {
         lv.hopOK[i] = solid[i] && !lv.noHop[i] ? 1 : 0;
@@ -2228,10 +2578,11 @@ h2 {
     // Helper bubbles on the track: fixed spots, the same on every replay.
     {
       const unlocked = t => n >= P.unlock[t];
-      const nearIntro = s => lv.introStep >= 0 && s >= lv.introStep - 6 && s <= lv.introEnd + 1;
+      const nearIntro = s => (lv.introStep >= 0 && s >= lv.introStep - 6 && s <= lv.introEnd + 1) || (lv.fIntroStep >= 0 && s >= lv.fIntroStep - 6 && s <= lv.fIntroEnd + 1);
       const helpFor = t => {
-        if (t === 'BR' || t === 'B1' || t === 'BX' || t === 'PR' || t === 'PX' || t === 'PD') return unlocked('shield') ? 'shield' : 'magnet';
-        if (t === 'BO') return 'magnet';
+        if (t === 'BR' || t === 'B1' || t === 'BX' || t === 'PR' || t === 'PX' || t === 'PD' || t === 'TN') return unlocked('shield') ? 'shield' : 'magnet';
+        if (t === 'BO' || t === 'UP' || t === 'DN') return 'magnet';
+        if (t === 'IS' || t === 'RJ') return unlocked('jump') && r() < 0.5 ? 'jump' : unlocked('shield') ? 'shield' : 'magnet';
         const air = r() < 0.5 ? 'fly' : 'jump';
         return unlocked(air) ? air : unlocked('jump') ? 'jump' : 'magnet';
       };
@@ -2264,7 +2615,7 @@ h2 {
       // and no Super Jump or Fly sits next to a new idea. The bubbles a lesson depends on (forced) are kept as they are.
       picks.sort((a, b) => a.i - b.i);
       {
-        const airCap = P.skipCap * (finish * L / P.speed), isAir = t => t === 'fly' || t === 'jump';
+        const airCap = P.skipCap * (finish * L / Math.max(P.speed, P.vel)), isAir = t => t === 'fly' || t === 'jump';
         const ALT = { fly: ['jump', 'shield', 'magnet'], jump: ['fly', 'magnet', 'shield'], shield: ['magnet', 'jump', 'fly'], magnet: ['shield', 'jump', 'fly'] };
         let airUsed = 0, prev = null;
         for (let q = 0; q < picks.length; q++) {
@@ -2394,12 +2745,30 @@ h2 {
   let buildLv = null;
   function node(k) {
     const lv = buildLv, kk = clamp(k, 0, lv.NS);
-    NODE.s = kk * DS; NODE.cx = lv.cx[kk]; NODE.y = lv.y[kk]; NODE.hw = lv.w[kk] / 2;
+    NODE.s = kk * DS; NODE.cx = lv.cx[kk]; NODE.y = lv.y[kk]; NODE.hw = lv.w[kk] / 2; NODE.bk = lv.bank[kk];
     const a = Math.max(0, kk - 1), b = Math.min(lv.NS, kk + 1);
     NODE.sl = (lv.y[b] - lv.y[a]) / ((b - a) * DS || 1);
+    NODE.tx = (lv.cx[b] - lv.cx[a]) / ((b - a) * DS || 1);
     return NODE;
   }
   function sampleLv(lv, arr, s) { const f = clamp(s / DS, 0, lv.NS - 0.0001), k = Math.floor(f), t = f - k; return arr[k] + (arr[k + 1] - arr[k]) * t; }
+  // Deck texture coordinates that keep the planks and tiles square to the direction of travel on bends.
+  function deckUV(V, n, x, su, sv) {
+    const off = x - n.cx, c2 = 1 / (1 + n.tx * n.tx);
+    V.u = off * Math.sqrt(c2) / su; V.v = (n.s + off * n.tx * c2) / sv;
+  }
+  // Banked bends: raise every vertex of a built strip by bank x its sideways offset and tilt its normal to match.
+  function bankPass(lv, b) {
+    if (!lv.banked) return;
+    const p = b.p, nn = b.n;
+    for (let i = 0; i < p.length; i += 3) {
+      const s = -p[i + 2], bk = sampleLv(lv, lv.bank, s);
+      if (!bk) continue;
+      p[i + 1] += bk * (p[i] - sampleLv(lv, lv.cx, s));
+      const c = 1 / Math.sqrt(1 + bk * bk), sn = bk * c, nx = nn[i], ny = nn[i + 1];
+      nn[i] = nx * c - ny * sn; nn[i + 1] = nx * sn + ny * c;
+    }
+  }
   function inst(geo, mat, list, cast, write) {
     const m = new THREE.InstancedMesh(geo, mat, Math.max(1, list.length));
     const M = new THREE.Matrix4();
@@ -2445,7 +2814,7 @@ h2 {
       let j = i; while (j < lv.N && !lv.gap[j] && lv.bridge[j] === isB) j++;
       const k0 = i * SUB, k1 = j * SUB;
       if (!isB) {
-        ribbon(bDeck, k0, k1, (k, sd, V) => { const n = node(k), x = sd ? n.cx + n.hw - TRIM : n.cx - n.hw + TRIM; setV(V, x, n.y, -n.s, 0, 1, n.sl, (x - n.cx) / deck.u, n.s / deck.v); }, false);
+        ribbon(bDeck, k0, k1, (k, sd, V) => { const n = node(k), x = sd ? n.cx + n.hw - TRIM : n.cx - n.hw + TRIM; setV(V, x, n.y, -n.s, 0, 1, n.sl, 0, 0); deckUV(V, n, x, deck.u, deck.v); }, false);
         for (const o of [-1, 1]) {
           const fl = o < 0;
           ribbon(bTrim, k0, k1, (k, sd, V) => { const n = node(k), x0 = n.cx + o * n.hw; setV(V, sd ? x0 : x0 - o * TRIM, n.y + 0.012, -n.s, 0, 1, n.sl, n.s / 2, sd ? 0.12 : 0); }, fl);
@@ -2463,15 +2832,15 @@ h2 {
             ribbon(bEdge, a * SUB, b * SUB, (k, sd, V) => { const n = node(k), x0 = n.cx + o * n.hw; setV(V, sd ? x0 : x0 - o * TRIM, n.y + 0.02, -n.s, 0, 1, n.sl, sd ? 1 : 0, n.s); }, fl);
             a = b;
           }
-          for (let k = k0; k <= k1; k++) { const n = node(k); bolts.push(n.cx + o * (n.hw - TRIM / 2), n.y + 0.027, -n.s); }
+          for (let k = k0; k <= k1; k++) { const n = node(k), off = o * (n.hw - TRIM / 2); bolts.push(n.cx + off, n.y + 0.027 + n.bk * off, -n.s); }
         }
         ribbon(bBody, k0, k1, (k, sd, V) => { const n = node(k), x = sd ? n.cx + n.hw - 0.05 : n.cx - n.hw + 0.05; setV(V, x, n.y - BODY_T, -n.s, 0, -1, 0, 0, 0, underC); }, true);
         if (i === 0 || lv.gap[i - 1] || lv.bridge[i - 1]) cap(k0, 1, true);
         if (j >= lv.N || lv.gap[j] || lv.bridge[j]) cap(k1, -1, true);
-        for (let k = k0 + 1; k < k1; k += SUB) { const n = node(k); joists.push(n.cx, n.y - BODY_T - 0.08, -n.s, n.hw * 2 - 0.4, 0.16, 0.14); }
+        for (let k = k0 + 1; k < k1; k += SUB) { const n = node(k); joists.push(n.cx, n.y - BODY_T - 0.08, -n.s, n.hw * 2 - 0.4, 0.16, 0.14, Math.atan(n.bk)); }
       } else {
         const bu = glass ? 1 : bset.u, bv = glass ? 1 : bset.v;
-        ribbon(bBridge, k0, k1, (k, sd, V) => { const n = node(k), x = sd ? n.cx + n.hw - 0.08 : n.cx - n.hw + 0.08; setV(V, x, n.y, -n.s, 0, 1, n.sl, (x - n.cx) / bu, n.s / bv); }, false);
+        ribbon(bBridge, k0, k1, (k, sd, V) => { const n = node(k), x = sd ? n.cx + n.hw - 0.08 : n.cx - n.hw + 0.08; setV(V, x, n.y, -n.s, 0, 1, n.sl, 0, 0); deckUV(V, n, x, bu, bv); }, false);
         if (!glass) ribbon(bBridge, k0, k1, (k, sd, V) => { const n = node(k), x = sd ? n.cx + n.hw - 0.08 : n.cx - n.hw + 0.08; setV(V, x, n.y - 0.1, -n.s, 0, -1, 0, (x - n.cx) / bu, n.s / bv); }, true);
         for (const o of [-1, 1]) {
           const fl = o < 0;
@@ -2488,10 +2857,11 @@ h2 {
             a = b;
           }
         }
-        for (let k = k0 + 1; k < k1; k++) { const n = node(k); joists.push(n.cx, n.y - 0.18, -n.s, n.hw * 2 - 0.16, 0.08, 0.07); }
+        for (let k = k0 + 1; k < k1; k++) { const n = node(k); joists.push(n.cx, n.y - 0.18, -n.s, n.hw * 2 - 0.16, 0.08, 0.07, Math.atan(n.bk)); }
       }
       i = j;
     }
+    for (const b of [bDeck, bTrim, bBody, bEdge, bBridge]) bankPass(lv, b);
     const add = (geo, mat, cast, color) => { const m = new THREE.Mesh(geo, mat); m.receiveShadow = true; m.castShadow = !!cast; m.matrixAutoUpdate = false; group.add(m); disp.push(geo); return m; };
     if (bDeck.v) add(gbGeo(bDeck), deck.mat);
     if (bTrim.v) add(gbGeo(bTrim), MAT.trim);
@@ -2499,9 +2869,10 @@ h2 {
     if (bEdge.v) add(gbGeo(bEdge), MAT.hazard);
     if (bBridge.v) { const m = add(gbGeo(bBridge), glass ? MAT.glass : bset.mat); if (glass) m.renderOrder = 1; }
     const jl = [], bl = [];
-    for (let q = 0; q < joists.length; q += 6) jl.push(q);
+    for (let q = 0; q < joists.length; q += 7) jl.push(q);
     for (let q = 0; q < bolts.length; q += 3) bl.push(q);
-    const jm = inst(UNIT_BOX, MAT.joist, jl, false, (M, q) => M.compose(_p0.set(joists[q], joists[q + 1], joists[q + 2]), _q0.identity(), _s0.set(joists[q + 3], joists[q + 4], joists[q + 5])));
+    const zAxis = new THREE.Vector3(0, 0, 1);
+    const jm = inst(UNIT_BOX, MAT.joist, jl, false, (M, q) => M.compose(_p0.set(joists[q], joists[q + 1], joists[q + 2]), _q0.setFromAxisAngle(zAxis, joists[q + 6]), _s0.set(joists[q + 3], joists[q + 4], joists[q + 5])));
     const bm = inst(BOLT_GEO, MAT.metalI, bl, false, (M, q) => M.makeTranslation(bolts[q], bolts[q + 1], bolts[q + 2]));
     bm.receiveShadow = false;
     group.add(jm, bm); disp.push(jm, bm);
@@ -2511,7 +2882,7 @@ h2 {
   function tube(b, k0, k1, o, h, rad) {
     const seg = 8, start = b.v, t = new THREE.Vector3(), n0 = new THREE.Vector3(), b0 = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
     let len = 0, px = 0, py = 0, pz = 0;
-    const P = k => { const n = node(k); return [n.cx + o * (n.hw - 0.12), n.y + h, -n.s]; };
+    const P = k => { const n = node(k), off = o * (n.hw - 0.12); return [n.cx + off, n.y + h + n.bk * off, -n.s]; };
     for (let k = k0; k <= k1; k++) {
       const [x, y, z] = P(k), [xa, ya, za] = P(Math.max(k0, k - 1)), [xb, yb, zb] = P(Math.min(k1, k + 1));
       if (k > k0) len += Math.hypot(x - px, y - py, z - pz);
@@ -2544,9 +2915,9 @@ h2 {
         const k0 = i * SUB, k1 = j * SUB;
         for (const [h, rad] of tubes) {
           tube(bT, k0, k1, o, h, rad);
-          for (const k of [k0, k1]) { const n = node(k); caps.push(n.cx + o * (n.hw - 0.12), n.y + h, -n.s, rad * 1.25); }
+          for (const k of [k0, k1]) { const n = node(k), off = o * (n.hw - 0.12); caps.push(n.cx + off, n.y + h + n.bk * off, -n.s, rad * 1.25); }
         }
-        for (let k = k0; k <= k1; k += SUB) { const n = node(k); posts.push(n.cx + o * (n.hw - 0.12), n.y, -n.s, tubes[0][0]); }
+        for (let k = k0; k <= k1; k += SUB) { const n = node(k), off = o * (n.hw - 0.12); posts.push(n.cx + off, n.y + n.bk * off, -n.s, tubes[0][0]); }
         i = j;
       }
     }
@@ -2956,7 +3327,7 @@ h2 {
   function loadLevel(n) {
     if (lvl) resetBonuses(true);
     unloadLevel();
-    const lv = genLevel(n);
+    const lv = genLevel(n, ageOf());
     setWorld(lv.world, lv);
     lv.group = new THREE.Group(); lv.disposables = [];
     buildTrack(lv, lv.group, lv.disposables);
@@ -2982,8 +3353,8 @@ h2 {
   // ---------- Ball and game state ----------
   const ball = {
     s: 1.5, lat: 0, y: R, x: 0, z: -1.5, fwd: 0, latV: 0, vy: 0, mode: 'roll', tgt: 0,
-    boostT: 0, boostF: 1, bumpT: 0, holdT: 0, assistLat: 0, ghostT: 0, tempRail: 0, teeter: 0, hopCool: 0,
-    arc: { s0: 0, s1: 0, y0: 0, y1: 0, H: 0, T: 1, t: 0, latMin: -9, latMax: 9, kind: '' },
+    boostT: 0, boostF: 1, bumpT: 0, holdT: 0, assistLat: 0, ghostT: 0, tempRail: 0, teeter: 0, hopCool: 0, slopeF: 1,
+    arc: { s0: 0, s1: 0, y0: 0, y1: 0, H: 0, T: 1, t: 0, latMin: -9, latMax: 9, kind: '', lat0: 0, fol: 1, land: 9, pull: 0, pullR: 0 },
     fly: { h: 0, landing: false, s0: 0, s1: 0, y0: 0, lat0: 0 },
     res: { s0: 0, s1: 0, y0: 0, lat0: 0, t: 0, T: 1.2 },
     squash: 0, plat: null, lastLand: 0
@@ -2991,7 +3362,8 @@ h2 {
   let state = 'menu', prevState = 'playing', stateTimer = 0, gt = 0, levelStars = 0, lastCp = 0, lastCpIdx = 0, rollIn = 1;
   let hintTimer = 0, steerTotal = 0, fingerDown = false, idleT = 0, assistBoost = false, helpedSections = 0, cleanSection = true, lastBumpT = 0;
   const input = { keyL: false, keyR: false };
-  const levelSpeed = () => lvl.P.speed * AGE_MULT[clamp(save.speed | 0, 0, 2)];
+  const levelSpeed = () => lvl.P.vel;
+  const bankAt = s => lvl.banked ? arrAt(lvl.bank, s) : 0;
   function autoCentreTime() {
     const P = lvl.P;
     if (!assistBoost) return P.autoCentre;
@@ -3012,21 +3384,22 @@ h2 {
   function resetBallAt(s) {
     const b = ball;
     b.s = s; b.lat = 0; b.tgt = 0; b.latV = 0; b.vy = 0; b.fwd = 0; b.mode = 'roll';
-    b.boostT = 0; b.boostF = 1; b.bumpT = 0; b.holdT = 0; b.ghostT = 0; b.tempRail = 0; b.teeter = 0; b.hopCool = 0; b.squash = 0; b.plat = null;
+    b.boostT = 0; b.boostF = 1; b.bumpT = 0; b.holdT = 0; b.ghostT = 0; b.tempRail = 0; b.teeter = 0; b.hopCool = 0; b.squash = 0; b.plat = null; b.slopeF = 1;
     b.y = yAt(s) + R; b.z = -s; b.x = cxAt(s);
     vt = s / lvl.P.speed;
     for (const p of lvl.platforms) { p.off = platOffset(p, (vt - p.s0 / lvl.P.speed) * p.slow); p.offLast = p.off; }
   }
 
   // Steering: a target lateral position moved by the finger or keys, followed with smoothing and a speed cap.
+  // Both scale with the age choice: the older the child, the less smoothing and the faster the ball can move sideways.
   function steer(dt, latMin, latMax) {
-    const b = ball, P = lvl.P, cap = P.steerCap;
-    if (input.keyL) b.tgt -= cap * dt;
-    if (input.keyR) b.tgt += cap * dt;
+    const b = ball, P = lvl.P, A = AGES[P.age], cap = P.steerCap * A.cap, keyCap = P.steerCap * Math.sqrt(A.cap);
+    if (input.keyL) b.tgt -= keyCap * dt;
+    if (input.keyR) b.tgt += keyCap * dt;
     if (!fingerDown && !input.keyL && !input.keyR && state === 'playing' && b.mode === 'roll') {
       const ac = autoCentreTime();
-      // auto-centre returns to the middle; only on Slow (ages 3 to 4) does it steer round obstacles along the star line
-      if (ac > 0) { const k = clamp(Math.round(b.s / DS), 0, lvl.NS), aim = (save.speed === 0 && lvl.keyed[k]) ? lvl.safe[k] : 0; b.tgt += (aim - b.tgt) * Math.min(1, dt / ac); }
+      // auto-centre returns to the middle; only for ages 3 to 4 does it steer round obstacles along the star line
+      if (ac > 0) { const k = clamp(Math.round(b.s / DS), 0, lvl.NS), aim = (P.age === 0 && lvl.keyed[k]) ? lvl.safe[k] : 0; b.tgt += (aim - b.tgt) * Math.min(1, dt / ac); }
       else if (edgeNudgeOn()) {
         const i = stepAt(b.s), hw = wAt(b.s) / 2;
         if (!lvl.railL[i] && b.lat - R < -hw + 0.5) b.tgt += 1.2 * dt;
@@ -3036,7 +3409,7 @@ h2 {
     const hwT = wAt(b.s) / 2 + 1.0;
     b.tgt = clamp(b.tgt, Math.max(-hwT, latMin), Math.min(hwT, latMax));
     const desired = b.holdT > 0 ? b.assistLat : b.tgt;
-    b.latV = clamp((desired - b.lat) / 0.1, -cap, cap);
+    b.latV = clamp((desired - b.lat) / A.tau, -cap, cap);
     b.lat = clamp(b.lat + b.latV * dt, latMin, latMax);
   }
   function railClamp(i, hw) {
@@ -3054,11 +3427,13 @@ h2 {
   // ---------- Rolling ----------
   function rollStep(dt, target) {
     const b = ball, lv = lvl;
-    b.fwd += (target - b.fwd) * Math.min(1, dt * (b.fwd < target ? 2.0 : 4.0));
+    b.fwd += (target - b.fwd) * Math.min(1, dt * (b.fwd < target ? AGES[lv.P.age].accel : 4.0));
     steer(dt, -99, 99);
     const sOld = b.s, cxOld = cxAt(sOld);
     b.s += b.fwd * dt;
-    if (lv.P.follow < 1) { const d = (cxAt(b.s) - cxOld) * (1 - lv.P.follow); b.lat -= d; b.tgt -= d; }
+    // the ball keeps part of its sideways line through curves and bends; the rest is the child's steering
+    const fol = arrAt(lv.fol, b.s);
+    if (fol < 1) { const d = (cxAt(b.s) - cxOld) * (1 - fol); b.lat -= d; b.tgt -= d; }
     // carried by a moving platform
     const p = platformAt(b.s);
     if (p) {
@@ -3085,12 +3460,12 @@ h2 {
       b.plat = null;
       if (!tr.gap) railClamp(tr.i, hw);
       collideObstacles(dt);
-      const t2 = trackAt(b.s), f = forgiveVals(), over = Math.abs(b.lat) - t2.w / 2;
-      if (!t2.gap && over <= f[0]) { b.teeter = 0; b.y = t2.y + R; }
+      const t2 = trackAt(b.s), f = forgiveVals(), over = Math.abs(b.lat) - t2.w / 2, gy = t2.y + bankAt(b.s) * clamp(b.lat, -t2.w / 2, t2.w / 2);
+      if (!t2.gap && over <= f[0]) { b.teeter = 0; b.y = gy + R; }
       else if (!t2.gap && over <= f[0] + 0.45 && b.teeter < f[1]) {
         if (b.teeter === 0) sfx.teeter();
         b.teeter += dt;
-        b.y = t2.y + R - clamp((over - f[0]) / 0.45, 0, 1) * 0.22 - Math.abs(Math.sin(gt * 18)) * 0.03;
+        b.y = gy + R - clamp((over - f[0]) / 0.45, 0, 1) * 0.22 - Math.abs(Math.sin(gt * 18)) * 0.03;
       } else { startFall(); return; }
     }
     // Super Jump: hop by itself onto checked, safe landings
@@ -3105,7 +3480,7 @@ h2 {
     return [lvl.railL[i] ? -lim : -(hw - 1.0), lvl.railR[i] ? lim : hw - 1.0];
   }
   function tryHop() {
-    const b = ball, lv = lvl, base = lv.P.speed * 1.0;
+    const b = ball, lv = lvl, base = Math.max(lv.P.speed, levelSpeed());   // a hop covers about a second of rolling
     if (launchAhead(b.s, b.s + base + 7)) return;
     for (let ext = 0; ext <= 3 * L; ext += 0.5) {
       const sl = b.s + base + ext;
@@ -3123,26 +3498,43 @@ h2 {
     const b = ball, a = b.arc;
     a.s0 = s0; a.s1 = s1; a.y0 = b.y; a.y1 = yAt(s1) + R; a.H = H; a.T = Math.max(0.25, T); a.t = 0; a.kind = kind;
     if (latMin > latMax) { const m = (latMin + latMax) / 2; latMin = latMax = m; }
-    a.latMin = latMin; a.latMax = latMax;
-    b.lat = clamp(b.lat, latMin, latMax); b.tgt = clamp(b.tgt, latMin, latMax);
+    a.latMin = latMin; a.latMax = latMax; a.lat0 = b.lat; a.fol = 1; a.land = 9; a.pull = 0; a.pullR = 0;
+    b.tgt = clamp(b.tgt, latMin, latMax);
     b.mode = 'arc'; b.fwd = (s1 - s0) / a.T; b.teeter = 0; b.plat = null;
   }
   function startArc(ln) {
     const b = ball, sup = bonus.type === 'jump' && ln.kind !== 'hop';
     const H = sup ? ln.H * 2 + 1.4 : ln.H;
-    const v = ln.kind === 'hop' ? Math.max(b.fwd, 1) : Math.max(b.fwd, levelSpeed()) * 1.35;
+    // island hops fly a little slower than pad jumps, so there is time to look at the next island
+    const v = ln.kind === 'hop' ? Math.max(b.fwd, 1) : Math.max(b.fwd, levelSpeed()) * (ln.stone ? 1.05 : 1.35);
     const s0 = b.s, s1 = Math.max(ln.sLand, s0 + 1);
-    const lr = ln.kind === 'hop' ? [-9, 9] : landRange(s1);
-    startGuided(s0, s1, H, (s1 - s0) / v, Math.max(lr[0], b.lat - 0.5), Math.min(lr[1], b.lat + 0.5), ln.kind);
+    if (ln.stone && ln.fol < 1) {
+      // older children steer onto the next island in the air; a soft pull near the end lands near misses
+      startGuided(s0, s1, H, (s1 - s0) / v, -4, 4, ln.kind);
+      const a = b.arc, age = lvl.P.age;
+      a.fol = ln.fol; a.land = ln.landHalf; a.pull = [0, 9, 7, 5][age]; a.pullR = [0, 1.0, 0.8, 0.6][age];
+    } else {
+      const lr = ln.kind === 'hop' ? [-9, 9] : landRange(s1);
+      startGuided(s0, s1, H, (s1 - s0) / v, Math.max(lr[0], b.lat - 0.5), Math.min(lr[1], b.lat + 0.5), ln.kind);
+    }
     if (ln.kind === 'hop') sfx.hop(); else { sfx.jump(); fxPad(ln); }
   }
   function arcStep(dt) {
     const b = ball, a = b.arc;
     a.t += dt;
-    const u = Math.min(1, a.t / a.T);
+    const u = Math.min(1, a.t / a.T), sPrev = b.s;
     b.s = lerp(a.s0, a.s1, u);
     b.y = lerp(a.y0, a.y1, u) + 4 * a.H * u * (1 - u);
-    steer(dt, a.latMin, a.latMax);
+    if (a.fol < 1) {
+      const d = (cxAt(b.s) - cxAt(sPrev)) * (1 - a.fol); b.lat -= d; b.tgt -= d;
+      if (u > 0.5 && a.pull) {
+        const lim = Math.max(0.2, a.land - 0.35), aim = clamp(b.lat, -lim, lim), miss = Math.abs(b.lat - aim);
+        if (miss > 0 && miss < a.pullR + 0.35) { const k = Math.min(1, dt * a.pull); b.lat += (aim - b.lat) * k; b.tgt += (aim - b.tgt) * k; }
+      }
+    }
+    // the sideways range narrows to the landing range over the first part of the flight, so nothing jumps sideways at take-off
+    const w = smooth(Math.min(1, u * 1.6));
+    steer(dt, lerp(Math.min(a.latMin, a.lat0), a.latMin, w), lerp(Math.max(a.latMax, a.lat0), a.latMax, w));
     if (u >= 1) {
       b.mode = 'roll'; b.y = yAt(b.s) + R; b.teeter = 0;
       b.hopCool = a.kind === 'sj' ? 0.06 : 0.3;
@@ -3207,7 +3599,7 @@ h2 {
   function flyStep(dt) {
     const b = ball, lv = lvl, f = b.fly;
     b.fwd += (levelSpeed() * rollIn - b.fwd) * Math.min(1, dt * 2);
-    const tr = trackAt(b.s), hw = (tr.gap ? lv.P.width : tr.w) / 2, lim = Math.max(0.2, hw - 0.7);
+    const tr = trackAt(b.s), hw = Math.max(lv.P.width, tr.gap ? 0 : tr.w) / 2, lim = Math.max(0.2, hw - 0.7);   // small islands below never pinch the flight
     steer(dt, f.landing ? -9 : -lim, f.landing ? 9 : lim);
     b.s += b.fwd * dt;
     const ground = yAt(b.s) + R;
@@ -3220,7 +3612,7 @@ h2 {
       }
     } else {
       const u = clamp((b.s - f.s0) / Math.max(0.5, f.s1 - f.s0), 0, 1), e = smooth(u);
-      b.y = lerp(f.y0, ground, e); b.lat = lerp(f.lat0, 0, e); b.tgt = b.lat;
+      b.y = Math.max(lerp(f.y0, ground, e), ground); b.lat = lerp(f.lat0, 0, e); b.tgt = b.lat;   // never below a hill top it glides onto
       if (u >= 1) {
         b.mode = 'roll'; b.y = ground; b.ghostT = 1.0; b.tempRail = 1.0; b.hopCool = 0.3;
         sfx.land(); fxLand(); b.squash = 0.2;
@@ -3285,7 +3677,7 @@ h2 {
     const b = ball, lv = lvl, bx = cxAt(b.s) + b.lat, by = b.y, bz = -b.s;
     const magR = bonus.type === 'magnet' ? lv.P.magnetR : 0, mr2 = magR * magR;
     const column = b.mode === 'fly' || (b.mode === 'arc' && b.arc.kind === 'sj');
-    const reach = lv.n <= 5 || save.speed === 0 ? 1.1 : 0.85;   // a slightly smaller reach from level 6 on Normal and Zoom
+    const reach = lv.n <= 5 || lv.P.age === 0 ? 1.1 : 0.85;   // a slightly smaller reach from level 6 for ages 5 and up
     for (let i = 0; i < lv.stars.length; i++) {
       const st = lv.stars[i];
       if (!st.alive) continue;
@@ -3345,7 +3737,7 @@ h2 {
   function helpingHand(sec) {
     const lv = lvl;
     if (!lv.P.helping) return;
-    const f = ++lv.secFalls[sec], th = HELP_AT[clamp(save.speed | 0, 0, 2)];
+    const f = ++lv.secFalls[sec], th = AGES[lv.P.age].help;
     if (f >= th[0] && !(lv.helped[sec] & 1)) {
       lv.helped[sec] |= 1; helpedSections++;
       if (helpedSections >= 3) assistBoost = true;
@@ -3395,8 +3787,13 @@ h2 {
   }
   function stepBall(dt) {
     const b = ball, sBefore = b.s;
+    // Hills: the ball slows going up and gains going down; after a run down it keeps the extra speed for a moment.
+    if (b.mode === 'roll' && !b.plat) {
+      const m = arrAt(lvl.spd, b.s);
+      b.slopeF += (m - b.slopeF) * Math.min(1, dt * (m < b.slopeF ? (m < 0.995 ? 1.8 : 0.8) : 1.2));
+    } else b.slopeF += (1 - b.slopeF) * Math.min(1, dt * 0.8);
     let target = 0;
-    if (state === 'playing') target = levelSpeed() * b.boostF * (b.bumpT > 0 ? lerp(1, 0.45, b.bumpT / 0.5) : 1) * rollIn;
+    if (state === 'playing') target = levelSpeed() * b.slopeF * b.boostF * (b.bumpT > 0 ? lerp(1, 0.45, b.bumpT / 0.5) : 1) * rollIn;
     else if (state === 'finishing') target = levelSpeed() * 0.55 * Math.max(0, stateTimer / 1.8);
     if (b.boostT > 0) { b.boostT -= dt; b.boostF = Math.min(1.28, b.boostF + dt / 0.4 * 0.28); }
     else b.boostF = Math.max(1, b.boostF - dt * 0.28);
@@ -3404,7 +3801,7 @@ h2 {
     if (b.holdT > 0) b.holdT -= dt;
     if (b.ghostT > 0) b.ghostT -= dt;
     if (b.tempRail > 0) b.tempRail -= dt;
-    if (rollIn < 1 && state === 'playing') rollIn = Math.min(1, rollIn + dt / 0.6);
+    if (rollIn < 1 && state === 'playing') rollIn = Math.min(1, rollIn + dt / AGES[lvl.P.age].rollIn);
     switch (b.mode) {
       case 'roll': rollStep(dt, target); if (b.mode === 'roll' && state === 'playing' && TR.kind === 2 && b.boostT < 0.9) { b.boostT = 1.4; sfx.boost(); fxBoost(); } break;
       case 'arc': arcStep(dt); break;
@@ -3419,7 +3816,7 @@ h2 {
     // the time gained is paid back on the next calm stretch, before the next moving obstacle comes near.
     const P = lvl.P, dv = (b.s - sBefore) / P.speed;
     let next = vt + Math.max(0, dv);
-    if (b.bumpT > 0 || b.holdT > 0) next = Math.max(next, vt + dt * AGE_MULT[clamp(save.speed | 0, 0, 2)] * 0.7);
+    if (b.bumpT > 0 || b.holdT > 0) next = Math.max(next, vt + dt * P.ratio * 0.7);
     else if (dv > 0) { const lead = next - b.s / P.speed; if (lead > 0 && !movingNear(b.s)) next -= Math.min(lead, dt * 0.35, dv); }
     vt = next;
   }
@@ -3439,7 +3836,7 @@ h2 {
       if (state === 'playing' || state === 'finishing') updateBonus(dt);
       if (state === 'falling') { stateTimer -= dt; if (stateTimer <= 0 || ball.y < yAt(ball.s) - 30) respawn(); }
       else if (state === 'finishing') { stateTimer -= dt; if (stateTimer <= 0) showComplete(); }
-    } else if (state === 'ready' || state === 'menu' || state === 'shop') {
+    } else if (state === 'ready' || menuLike()) {
       idleAmt = Math.min(1, idleAmt + dt);
       updateObstacles(ball.s);
     }
@@ -3453,7 +3850,10 @@ h2 {
   const bonus = { type: null, t: 0, dur: 1, queue: null, queueSrc: null, last: null, skip: 0, rescue: false, ending: false, tickAt: 2, ringShown: -1 };
   const shieldActive = () => bonus.type === 'shield';
   const unlockedB = t => !!lvl && lvl.n >= lvl.P.unlock[t];
-  function nearIntro(s) { const lv = lvl; if (lv.introStep < 0) return false; const st = s / L; return st >= lv.introStep - 6 && st <= lv.introEnd + 1; }
+  function nearIntro(s) {
+    const lv = lvl, st = s / L;
+    return (lv.introStep >= 0 && st >= lv.introStep - 6 && st <= lv.introEnd + 1) || (lv.fIntroStep >= 0 && st >= lv.fIntroStep - 6 && st <= lv.fIntroEnd + 1);
+  }
   function skipLeft() { const lv = lvl; return lv.P.skipCap * (lv.N * L / levelSpeed()) - bonus.skip; }
   function canStart(type) {
     if (state !== 'playing') return false;
@@ -3551,7 +3951,8 @@ h2 {
     for (const o of lv.obstacles) if (o.s > s && o.s < ahead) risky = true;
     // no Fly or Super Jump if the level's new idea comes up within the whole flight (plus a margin)
     const reachS = s + levelSpeed() * (lv.P.dur.fly + 4);
-    const introAhead = lv.introStep >= 0 && (lv.introStep - 6) * L <= reachS && (lv.introEnd + 1) * L >= s;
+    const introAhead = (lv.introStep >= 0 && (lv.introStep - 6) * L <= reachS && (lv.introEnd + 1) * L >= s) ||
+      (lv.fIntroStep >= 0 && (lv.fIntroStep - 6) * L <= reachS && (lv.fIntroEnd + 1) * L >= s);
     const skipOK = skipLeft() > lv.P.dur.fly && !introAhead;
     const ok = t => unlockedB(t) && t !== bonus.last && ((t !== 'jump' && t !== 'fly') || skipOK);
     const air = bonus.last === 'fly' ? ['jump', 'fly'] : ['fly', 'jump'];
@@ -3573,7 +3974,7 @@ h2 {
         addLiveStar(s, lat, yAt(s) + R + 2.5, true);
       }
     } else {
-      const hop = lvl.P.speed;
+      const hop = Math.max(lvl.P.speed, v);
       for (let k = 0; k < 5; k++) {
         const s = b.s + hop * (k + 0.5) + 0.3;
         if (s > lvl.finish * L - 4 || !lvl.hopOK[stepAt(s)]) continue;
@@ -3894,9 +4295,12 @@ h2 {
     b.squash = Math.max(0, b.squash - dt * 1.4);
     const sq = b.squash * Math.max(0, Math.cos(b.squash * 30));
     ballMesh.scale.set(1 + sq * 0.5, 1 - sq, 1 + sq * 0.5);
-    const tr = trackAt(b.s), solid = !tr.gap || !!b.plat, gy = b.plat ? b.plat.y : tr.y, h = b.y - R - gy;
+    const tr = trackAt(b.s), solid = !tr.gap || !!b.plat, bk = b.plat ? 0 : bankAt(b.s);
+    const gy = b.plat ? b.plat.y : tr.y + bk * clamp(b.lat, -tr.w / 2, tr.w / 2), h = b.y - R - gy;
     if (solid && h > -0.3 && Math.abs(b.lat - (b.plat ? b.plat.off : 0)) < (b.plat ? b.plat.w : tr.w) / 2 + 0.3) {
-      const k = clamp(1 - h / 3, 0.15, 1);
+      const k = clamp(1 - h / 3, 0.15, 1), sA = b.s - 0.5, sB = b.s + 0.5;
+      const sl = b.plat || lvl.gap[stepAt(sA)] || lvl.gap[stepAt(sB)] ? 0 : yAt(sB) - yAt(sA);   // lie flat on hills and banked bends
+      blob.rotation.set(Math.atan(sl), 0, Math.atan(bk));
       blob.visible = true; blob.position.set(b.x, gy + 0.03, b.z); blob.scale.set(0.6 + 0.4 * k, 1, 0.6 + 0.4 * k);
       MAT.shadowBlob.opacity = 0.55 * k;
     } else blob.visible = false;
@@ -3941,10 +4345,12 @@ h2 {
     else if (b.plat) refY = b.plat.y + R;
     if (state !== 'falling') camY = snap ? refY : camY + (refY - camY) * Math.min(1, dt * 4);
     const cxB = cxAt(b.s), cxA = cxAt(b.s + 9);
-    if (state === 'menu' || state === 'shop') {
-      if (menuLayoutDirty) layoutMenuCam();
-      if (!viewOffsetOn && (menuView.dx || menuView.dy)) applyMenuView(true);
-      const k = menuView.k;
+    if (menuLike()) {
+      if (state !== 'who') {
+        if (menuLayoutDirty) layoutMenuCam();
+        if (!viewOffsetOn && (menuView.dx || menuView.dy)) applyMenuView(true);
+      }
+      const k = state === 'who' ? 1 : menuView.k;
       tPos.set(b.x + Math.sin(gt * 0.35) * 1.0 * k, camY + 1.05 * k, b.z + 3.3 * k);
       tLook.set(b.x, camY - 0.95 * k, b.z - 1.4 * k);
     } else if (state === 'falling') {
@@ -3956,19 +4362,23 @@ h2 {
       if (b.mode === 'arc' && (b.arc.kind === 'pad' || b.arc.kind === 'ramp')) { tLook.z = lerp(tLook.z, -b.arc.s1, 0.35); tLook.y -= 0.4; }
     }
     if (viewOffsetOn && state !== 'menu' && state !== 'shop') applyMenuView(false);
-    const k = snap ? 1 : 1 - Math.exp(-dt * 4.5);
+    // Above the gentle speeds the camera keeps up a little tighter (so the ball stays the same size on screen) and the view
+    // widens slightly, which sells the speed.
+    const vRoll = b.mode === 'roll' || b.mode === 'fly' ? b.fwd : lvl ? levelSpeed() : 0, fast = Math.max(0, vRoll - 5.5);
+    const k = snap ? 1 : 1 - Math.exp(-dt * (4.5 + fast * 0.45));
     if (state !== 'falling' || snap) camPos.lerp(tPos, k);
-    camLook.lerp(tLook, snap ? 1 : 1 - Math.exp(-dt * 6));
+    camLook.lerp(tLook, snap ? 1 : 1 - Math.exp(-dt * (6 + fast * 0.4)));
     camera.position.copy(camPos);
     camera.lookAt(camLook);
-    const fovT = baseFov + (b.boostF - 1) * 20 + (b.mode === 'fly' ? 3 : 0);
+    const fovT = baseFov + (b.boostF - 1) * 20 + (b.mode === 'fly' ? 3 : 0) + (state === 'playing' ? Math.min(1, fast / 5) * 4 : 0);
     camFov += (fovT - camFov) * (snap ? 1 : Math.min(1, dt * 3));
     if (Math.abs(camera.fov - camFov) > 0.03) { camera.fov = camFov; camera.updateProjectionMatrix(); }
   }
 
   // ---------- Screens, HUD and toasts ----------
   let botNoBonus = false;
-  const screens = ['menu', 'shop', 'complete', 'paused'];
+  const screens = ['menu', 'shop', 'complete', 'paused', 'who'];
+  const menuLike = () => state === 'menu' || state === 'shop' || state === 'who';
   function showScreen(name) { screens.forEach(s => { $(s).hidden = s !== name; }); menuLayoutDirty = true; }
   // Small HUD pops run as Web Animations, so a star pickup never forces a style and layout pass mid-frame.
   const REDUCED = (() => { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } })();
@@ -3992,14 +4402,13 @@ h2 {
     ['hudStars', 'menuStars', 'shopStars'].forEach(id => { $(id).textContent = save.stars; });
     if (popIt) burst($('hudStarPill'), POP, 320);
   }
-  const AGE_TEXT = ['Best for ages 3 to 4', 'Best for ages 5 to 6', 'Best for ages 7 to 9'];
   function drawBallIcon() { const c = $('ballIcon'), g = c.getContext('2d'); g.clearRect(0, 0, 64, 64); g.drawImage(thumb(save.skin, 144), 0, 0, 64, 64); }
   function refreshMenu() {
     if (!lvl) return;
     $('prevLvl').disabled = lvl.n <= 1;
     $('nextLvl').disabled = lvl.n >= save.best;
-    document.querySelectorAll('#speedSeg button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.s === save.speed)));
-    $('ageHint').textContent = AGE_TEXT[save.speed];
+    document.querySelectorAll('#speedSeg button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.s === ageOf())));
+    $('ageHint').textContent = AGES[ageOf()].hint;
     $('soundLabel').textContent = save.muted ? 'Sound off' : 'Sound on';
     $('soundIcon').setAttribute('href', save.muted ? '#i-mute' : '#i-sound');
     $('menuLvl').textContent = 'Level ' + lvl.n;
@@ -4135,7 +4544,7 @@ h2 {
   // Only one finger steers: a second finger or a resting palm can tap to go but never moves the ball,
   // and lifting it does not stop the steering finger.
   let dragging = false, lastPX = 0, dragAcc = 0, dragActive = false, activeId = null;
-  const pxToM = () => 8 / clamp(viewW, 320, 1200);
+  const pxToM = () => AGES[ageOf()].sens / clamp(viewW, 320, 1200);
   canvas.addEventListener('pointerdown', e => {
     audio();
     if (activeId !== null && !e.isPrimary) { if (state === 'ready') go(); return; }
@@ -4146,8 +4555,9 @@ h2 {
   });
   canvas.addEventListener('pointermove', e => {
     if (!dragging || e.pointerId !== activeId) return;
-    const dx = e.clientX - lastPX; lastPX = e.clientX;
-    if (!dragActive) { dragAcc += dx; if (Math.abs(dragAcc) < 5) return; dragActive = true; }
+    let dx = e.clientX - lastPX; lastPX = e.clientX;
+    // a small dead zone tells a tap from a slide; the movement past it still steers, so the ball never lags the finger
+    if (!dragActive) { dragAcc += dx; const dz = AGES[ageOf()].dead; if (Math.abs(dragAcc) < dz) return; dragActive = true; dx = dragAcc - Math.sign(dragAcc) * dz; }
     if (state === 'playing') { ball.tgt += dx * pxToM(); steerTotal += Math.abs(dx); }
   });
   const endDrag = e => {
@@ -4184,7 +4594,18 @@ h2 {
   $('playBtn').addEventListener('click', startPlay);
   $('prevLvl').addEventListener('click', () => { if (!ensureBoot()) return; if (lvl.n > 1) { audio(); sfx.click(); save.level = lvl.n - 1; persist(); loadLevel(save.level); refreshMenu(); } });
   $('nextLvl').addEventListener('click', () => { if (!ensureBoot()) return; if (lvl.n < save.best) { audio(); sfx.click(); save.level = lvl.n + 1; persist(); loadLevel(save.level); refreshMenu(); } });
-  document.querySelectorAll('#speedSeg button').forEach(b => b.addEventListener('click', () => { if (!ensureBoot()) return; audio(); save.speed = +b.dataset.s; persist(); sfx.click(); refreshMenu(); }));
+  // Who's playing: the age sets the speed, the steering and the level layout, so the shown level is rebuilt for it.
+  function setAge(a) {
+    a = clamp(a | 0, 0, 3);
+    save.speed = a; save.agePicked = true; persist();
+    if (!ensureBoot()) return false;   // starting up builds the level for this age straight away
+    if (lvl.P.age !== a) { resetBonuses(true); loadLevel(lvl.n); }
+    if (state === 'who') { state = 'menu'; showScreen('menu'); }
+    refreshMenu();
+    return true;
+  }
+  document.querySelectorAll('#speedSeg button').forEach(b => b.addEventListener('click', () => { audio(); sfx.click(); setAge(+b.dataset.s); }));
+  document.querySelectorAll('#whoGrid button').forEach(b => b.addEventListener('click', () => { audio(); sfx.click(); setAge(+b.dataset.a); }));
   $('soundBtn').addEventListener('click', () => { if (!ensureBoot()) return; audio(); save.muted = !save.muted; persist(); sfx.click(); refreshMenu(); });
   $('shopBtn').addEventListener('click', () => { if (!ensureBoot()) return; audio(); sfx.click(); state = 'shop'; renderShop(); showScreen('shop'); });
   $('shopDone').addEventListener('click', () => { sfx.click(); state = 'menu'; showScreen('menu'); refreshMenu(); });
@@ -4204,20 +4625,25 @@ h2 {
     if (state !== 'paused') governor(raw);
     let dt = Math.min(raw, 1 / 20);
     // the menu, shop and level-done screens sit under blurred glass: draw them at 30 or 20 frames a second to save battery
-    if (state === 'menu' || state === 'shop' || state === 'complete') {
+    if (menuLike() || state === 'complete') {
       menuAcc += dt;
-      if (++menuFrames < (state === 'menu' ? 2 : 3)) return;
+      if (++menuFrames < (state === 'menu' || state === 'who' ? 2 : 3)) return;
       dt = Math.min(menuAcc, 0.1); menuAcc = 0; menuFrames = 0;
     } else { menuAcc = 0; menuFrames = 0; }
     frame(dt);
   }
+  let dbgHold = false;   // test hook only: keeps one moment on screen for a picture
   function frame(dt) {
     if (!lvl) return;
     if (state === 'paused') { if (!pausedDrawn) { pausedDrawn = true; renderer.render(scene, camera); } return; }
     pausedDrawn = false;
+    if (!dbgHold) update(dt);
+    renderer.render(scene, camera);
+  }
+  function update(dt) {
     gt += dt;
     simStep(dt);
-    if (state === 'menu' || state === 'shop') ballMesh.rotateY(dt * 0.6);
+    if (menuLike()) ballMesh.rotateY(dt * 0.6);
     if (hintTimer > 0) { hintTimer -= dt; if (hintTimer <= 0 || steerTotal > 90) { hintTimer = 0; $('hint').hidden = true; } }
     updateBallVisual(dt);
     updateStars(gt, dt); updatePickups(gt, dt);
@@ -4232,7 +4658,6 @@ h2 {
     if (state === 'playing' || state === 'finishing') setProgress((ball.s - START_S) / (lvl.finish * L + 0.8 - START_S));
     const rolling = ball.mode === 'roll' && (state === 'playing' || state === 'finishing');
     setRoll(rolling ? clamp(ball.fwd / 6, 0, 1) : 0, ball.fwd, gt);
-    renderer.render(scene, camera);
   }
   function startLoop() { if (loopOn) return; loopOn = true; pausedDrawn = false; clock.getDelta(); renderer.setAnimationLoop(tick); }
   function stopLoop() { loopOn = false; renderer.setAnimationLoop(null); }
@@ -4251,9 +4676,11 @@ h2 {
       const oldSkin = save.skin, owned = Array.isArray(s.owned) ? s.owned : [];
       save.best = Math.max(save.best | 0, s.best | 0); save.stars = Math.max(save.stars | 0, s.stars | 0);
       save.owned = save.owned.concat(owned.filter(id => save.owned.indexOf(id) < 0));
-      for (const k of ['level', 'skin', 'speed', 'muted', 'hinted']) if (k in s) save[k] = s[k];
+      const oldAge = ageOf();
+      for (const k of ['level', 'skin', 'speed', 'agePicked', 'muted', 'hinted']) if (k in s) save[k] = s[k];
       tidySave();
       if (save.skin !== oldSkin) applySkin(save.skin);
+      if (ageOf() !== oldAge && lvl.P.age !== ageOf() && state !== 'complete') loadLevel(lvl.n);
       if (state === 'shop') renderShop();
       if (state === 'menu') refreshMenu(); else refreshStars(false);
     } catch (err) {}
@@ -4266,7 +4693,8 @@ h2 {
     save.owned = save.owned.filter(id => SKIN_BY_ID[id]);
     if (save.owned.indexOf('selena') < 0) save.owned.unshift('selena');
     save.stars = Math.max(0, save.stars | 0);
-    save.speed = clamp(save.speed | 0, 0, 2);
+    save.speed = clamp(save.speed | 0, 0, 3);
+    save.agePicked = !!save.agePicked;
     save.best = Math.max(1, save.best | 0);
     save.level = clamp(save.level | 0, 1, save.best);
     save.muted = !!save.muted; save.hinted = !!save.hinted;
@@ -4281,8 +4709,10 @@ h2 {
     const oldBanner = MAT.banner.map; MAT.banner.map = bannerTexture(); oldBanner.dispose();
     applySkin(save.skin);
     loadLevel(save.level);
-    state = 'menu'; $('hud').hidden = true; $('hud2').hidden = true; hideOverlays();
-    showScreen('menu'); refreshMenu();
+    $('hud').hidden = true; $('hud2').hidden = true; hideOverlays();
+    // the first start asks who is playing before the menu (it sets the speed); after that the menu has the same choice
+    if (save.agePicked) { state = 'menu'; showScreen('menu'); } else { state = 'who'; showScreen('who'); }
+    refreshMenu();
     startLoop();
     if (DEBUG) installDebug();
   }
@@ -4300,44 +4730,117 @@ h2 {
   // ---------- Test hook (only when the page address contains "debug") ----------
   function installDebug() {
     const names = { jump: 'jump', superjump: 'jump', fly: 'fly', flying: 'fly', flyingball: 'fly', magnet: 'magnet', starmagnet: 'magnet', shield: 'shield', bubble: 'shield', bubbleshield: 'shield' };
+    // The test bot: plays a level without drawing. opts.age 0 to 3 (who is playing; opts.speed is the old name for it),
+    // react: seconds of lag, wobble: metres of sway, bonuses: let it use the helpers.
     function simulate(n, opts) {
       opts = opts || {};
       const react = opts.react == null ? 1.3 : opts.react, wobble = opts.wobble == null ? 0.4 : opts.wobble;
-      const keep = { speed: save.speed, stars: save.stars, best: save.best, level: save.level }, keepState = state;
+      const keep = { speed: save.speed, agePicked: save.agePicked, stars: save.stars, best: save.best, level: save.level }, keepState = state;
       headless = true; botNoBonus = !opts.bonuses;
-      save.speed = opts.speed == null ? 1 : opts.speed;
+      save.speed = clamp((opts.age != null ? opts.age : opts.speed != null ? opts.speed : 1) | 0, 0, 3);
       let res = null;
       try {
         loadLevel(n);
         state = 'playing'; rollIn = 1;
-        const hist = [], ph = (n * 1.7) % TAU, secF = {}, fallAt = [], trace = [], kinds = ['jump', 'fly', 'magnet', 'shield'];
+        const hist = [], ph = (n * 1.7) % TAU, secF = {}, fallAt = [], trace = [], kinds = ['jump', 'fly', 'magnet', 'shield'], replays = [];
+        const pieceAt = s => { const i = stepAt(s), c = lvl.chal.find(q => i >= q.s0 - 1 && i <= q.s0 + q.body); return c ? c.type : '-'; };
         let t = 0, falls = 0, nextSpam = 2, spamI = (n * 3) % 4, rescues = 0, flights = 0, hops = 0, lastMode = '';
+        const edge = { m: 9, at: '' };
         while (t < (opts.maxT || 420) && state !== 'complete') {
           t += 1 / 60;
           if (state === 'ready') { state = 'playing'; rollIn = 0; }
           const v = levelSpeed();
           hist.push(safeAt(ball.s + v * (react + 0.4)));
           const idx = hist.length - 1 - Math.round(react * 60);
-          if (!opts.noTouch) { ball.tgt = (idx >= 0 ? hist[idx] : 0) + Math.sin(t * 1.3 + ph) * wobble; fingerDown = true; }
-          else fingerDown = false;
+          if (!opts.noTouch) {
+            // opts.finger: how fast (m/s) the finger can move the aim, like a child's slide; unset, the aim jumps at once
+            const want = (idx >= 0 ? hist[idx] : 0) + Math.sin(t * 1.3 + ph) * wobble;
+            if (opts.finger) { const m = opts.finger / 60; ball.tgt += clamp(want - ball.tgt, -m, m); } else ball.tgt = want;
+            fingerDown = true;
+          } else fingerDown = false;
           if (opts.spam && t >= nextSpam && state === 'playing') { nextSpam = t + opts.spam; if (bonus.type) resetBonuses(false); grant(kinds[spamI++ % 4], 'debug'); }
           if (opts.dive && bonus.type === 'shield' && ball.mode === 'roll') ball.tgt = (Math.floor(t * 0.7) % 2 ? 1 : -1) * (wAt(ball.s) / 2 + 1.6);
           const before = state;
           simStep(1 / 60);
+          if (ball.mode === 'roll' && state === 'playing') {
+            // closest the ball came to an open edge (metres of deck left beside it; below 0 it is teetering)
+            const i = stepAt(ball.s), hw = wAt(ball.s) / 2, open = ball.lat < 0 ? !lvl.railL[i] : !lvl.railR[i];
+            if (open && !lvl.gap[i] && !ball.plat) { const m = hw - Math.abs(ball.lat) - R; if (m < edge.m) { edge.m = m; edge.at = pieceAt(ball.s) + '@' + i; } }
+          }
           if (opts.trace) { const o = lvl.obstacles.find(q => Math.abs(q.s - ball.s) < 4 && q.type === 'spinner'); trace.push([+t.toFixed(2), +ball.s.toFixed(2), +ball.lat.toFixed(2), +ball.tgt.toFixed(2), +ball.fwd.toFixed(2), o ? +(o.ang % TAU).toFixed(2) : null, +vt.toFixed(2), +ball.holdT.toFixed(2)]); if (trace.length > opts.trace) trace.shift(); }
           if (ball.mode !== lastMode) { if (ball.mode === 'rescue') rescues++; if (ball.mode === 'fly') flights++; if (ball.mode === 'arc' && ball.arc.kind === 'sj') hops++; lastMode = ball.mode; }
-          if (state === 'falling' && before !== 'falling') { falls++; secF[lastCpIdx] = (secF[lastCpIdx] || 0) + 1; if (fallAt.length < 6) fallAt.push(+ball.s.toFixed(1) + ':' + ball.lat.toFixed(2) + ':' + ball.mode); }
+          if (state === 'falling' && before !== 'falling') {
+            falls++; secF[lastCpIdx] = (secF[lastCpIdx] || 0) + 1;
+            // replay after the fall: the stretch from the checkpoint the ball goes back to, to where it fell
+            const cp = lvl.cps[lastCpIdx], back = cp === 0 ? START_S : (cp + 0.5) * L;
+            replays.push((ball.s - back) / levelSpeed());
+            if (fallAt.length < 6) fallAt.push(+ball.s.toFixed(1) + ':' + ball.lat.toFixed(2) + ':' + ball.mode + ':' + pieceAt(ball.s));
+          }
         }
         let maxSec = 0; for (const k in secF) maxSec = Math.max(maxSec, secF[k]);
         const st = stepAt(ball.s), near = lvl.chal.filter(c => Math.abs(c.s0 - st) < 14).map(c => c.type + '@' + c.s0).join(',');
-        res = { level: n, finished: state === 'complete', time: +t.toFixed(1), falls, sections: lvl.cps.length, maxSectionFalls: maxSec, stars: levelStars, starTotal: lvl.starTotal, obstacles: lvl.obstacles.length, challenges: lvl.chal.length, fallAt, trace, rescues, flights, hops, end: { s: +ball.s.toFixed(2), step: st, lat: +ball.lat.toFixed(2), mode: ball.mode, state, fwd: +ball.fwd.toFixed(2), gap: lvl.gap[st], kind: lvl.kind[st], near } };
+        res = { level: n, age: lvl.P.age, speed: +levelSpeed().toFixed(2), finished: state === 'complete', time: +t.toFixed(1), falls, sections: lvl.cps.length, maxSectionFalls: maxSec,
+          maxReplay: replays.length ? +Math.max(...replays).toFixed(1) : 0, meanReplay: replays.length ? +(replays.reduce((a, b) => a + b, 0) / replays.length).toFixed(1) : 0,
+          stars: levelStars, starTotal: lvl.starTotal, obstacles: lvl.obstacles.length, challenges: lvl.chal.length, pieces: lvl.chal.filter(c => c.feat).map(c => c.type + '@' + c.s0),
+          edge: +edge.m.toFixed(2), edgeAt: edge.at,
+          fallAt, trace, rescues, flights, hops, end: { s: +ball.s.toFixed(2), step: st, lat: +ball.lat.toFixed(2), mode: ball.mode, state, fwd: +ball.fwd.toFixed(2), gap: lvl.gap[st], kind: lvl.kind[st], near } };
       } finally {
         headless = false; botNoBonus = false; fingerDown = false;
         Object.assign(save, keep);
-        loadLevel(save.level); state = keepState === 'menu' ? 'menu' : 'menu';
-        showScreen('menu'); $('hud').hidden = true; $('hud2').hidden = true; hideOverlays(); refreshMenu(); refreshStars(false);
+        if (!opts.keep) {
+          loadLevel(save.level); state = keepState === 'who' ? 'who' : 'menu';
+          showScreen(state); $('hud').hidden = true; $('hud2').hidden = true; hideOverlays(); refreshMenu(); refreshStars(false);
+        } else state = 'menu';
       }
       return res;
+    }
+    // Put the ball still at a spot (s in metres, or a piece type and how many steps into it) for a picture.
+    function peek(where, into, lat) {
+      if (!lvl) return null;
+      let s = +where;
+      if (typeof where === 'string') { const c = lvl.chal.find(q => q.type === where); if (!c) return null; s = (c.s0 + (into || 0)) * L; }
+      if (state === 'menu' || state === 'who' || state === 'shop') { showScreen(null); $('hud').hidden = false; $('hud2').hidden = false; }
+      resetBallAt(clamp(s, 1, lvl.finish * L - 2));
+      if (lat) { ball.lat = ball.tgt = +lat; ball.x = cxAt(ball.s) + ball.lat; ball.y = yAt(ball.s) + bankAt(ball.s) * ball.lat + R; }
+      state = 'ready'; hideOverlays(); dbgHold = false;
+      updateBallVisual(0); updateCamera(0, true);
+      return { s: +ball.s.toFixed(2), step: stepAt(ball.s), y: +ball.y.toFixed(2) };
+    }
+    // Run the game for some seconds at a steady 60 steps a second without drawing, then hold that moment on screen.
+    function advance(sec) {
+      if (state === 'ready') { state = 'playing'; rollIn = 1; hideOverlays(); }
+      const nSteps = Math.round((+sec || 0) * 60);
+      for (let i = 0; i < nSteps; i++) update(1 / 60);
+      dbgHold = true;
+      return { s: +ball.s.toFixed(2), lat: +ball.lat.toFixed(2), y: +ball.y.toFixed(2), mode: ball.mode, state, fwd: +ball.fwd.toFixed(2) };
+    }
+    function speedTable(levels) {
+      const out = {};
+      for (const n of levels || [1, 5, 10, 15, 18, 20, 25, 30]) out[n] = AGES.map((A, a) => +levelParams(n, a).vel.toFixed(2));
+      return out;
+    }
+    function schedule(age, a, b) {
+      const out = {};
+      for (let n = a || 1; n <= (b || 30); n++) {
+        const lv = genLevel(n, age), cps = lv.cps.concat([lv.finish]);
+        let sec = 0; for (let i = 1; i < cps.length; i++) sec = Math.max(sec, cps[i] - cps[i - 1]);
+        // longest replay a fall can cost: the longest stretch from one checkpoint to the next, in seconds at this age's speed
+        out[n] = { len: lv.N, secs: +(lv.N * L / lv.P.vel).toFixed(0), pieces: lv.chal.filter(c => c.feat).map(c => c.type), obstacles: lv.obstacles.length, launches: lv.launches.length, maxReplay: +(sec * L / lv.P.vel).toFixed(1) };
+      }
+      return out;
+    }
+    // Every jump in a level: where it lands against its landing zone (metres of deck before and after the touch-down point).
+    function landings(n, age) {
+      const lv = genLevel(n, age), out = [];
+      for (const ln of lv.launches) {
+        if (ln.kind === 'hop') continue;
+        const i = Math.floor(ln.sLand / L);
+        let a = i, b = i;
+        while (a > 0 && !lv.gap[a - 1]) a--;
+        while (b < lv.N - 1 && !lv.gap[b + 1]) b++;
+        out.push({ kind: ln.kind + (ln.stone ? '/stone' : ''), before: +(ln.sLand - a * L).toFixed(2), after: +((b + 1) * L - ln.sLand).toFixed(2), width: +sampleLv(lv, lv.w, ln.sLand).toFixed(2), trigToLand: +(ln.sLand - ln.sTrig).toFixed(2) });
+      }
+      return out;
     }
     window.selenaDebug = {
       grant(type) {
@@ -4360,10 +4863,16 @@ h2 {
         return { state, level: lvl.n, world: lvl.world.name, s: +ball.s.toFixed(2), lat: +ball.lat.toFixed(2), y: +ball.y.toFixed(2), mode: ball.mode, bonus: bonus.type, t: +bonus.t.toFixed(2), queue: bonus.queue, stars: levelStars, meter: meter.n + '/' + meter.need, calls, triangles, programs: i.programs.length, textures: i.memory.textures, geometries: i.memory.geometries };
       },
       simulate,
+      // who is playing: 0 ages 3-4, 1 ages 5-6, 2 ages 7-8, 3 ages 9+ (rebuilds the shown level for that age)
+      setAge(a) { setAge(a); return AGES[ageOf()].range; },
+      age() { return { age: ageOf(), range: AGES[ageOf()].range, speed: lvl ? +levelSpeed().toFixed(2) : null, picked: save.agePicked }; },
+      who() { state = 'who'; showScreen('who'); $('hud').hidden = true; $('hud2').hidden = true; hideOverlays(); return state; },
+      speedTable, schedule, landings, peek, advance,
+      release() { dbgHold = false; return state; },
       programs() { return renderer.info.programs.map(p => p.name + ' | ' + String(p.cacheKey).split(',').slice(0, 12).join(',')); },
       steer(lat) { ball.tgt = +lat; return ball.tgt; },
       obstacles() { return lvl.obstacles.map(o => o.type + '@' + o.s.toFixed(1) + ' lat ' + o.lat.toFixed(2) + ' safe ' + o.safe.toFixed(2) + (o.clear != null ? ' clr ' + o.clear.toFixed(2) : '')); },
-      info() { const lv = lvl; return { n: lv.n, N: lv.N, cps: lv.cps.slice(), chal: lv.chal.map(c => c.type + '@' + c.s0), pickups: lv.pickups.map(p => p.type + '@' + Math.round(p.s / L)), stars: lv.stars.length, intro: lv.P.intro, railPct: lv.P.railPct }; }
+      info() { const lv = lvl; return { n: lv.n, age: lv.P.age, speed: +lv.P.vel.toFixed(2), N: lv.N, cps: lv.cps.slice(), chal: lv.chal.map(c => c.type + '@' + c.s0), pieces: lv.chal.filter(c => c.feat).map(c => c.type + '@' + c.s0), pickups: lv.pickups.map(p => p.type + '@' + Math.round(p.s / L)), stars: lv.stars.length, intro: lv.P.intro, railPct: lv.P.railPct }; }
     };
   }
 
