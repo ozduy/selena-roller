@@ -585,8 +585,9 @@ h2 {
   const persist = () => { if (headless) return; try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} };
 
   // ---------- Who is playing: four age choices that set the speed, the steering and how tough the new pieces are ----------
-  // v1: speed on level 1 in metres a second. Each older choice gains 3% a level until it is 50% faster than on level 1
-  // (level 18), then holds. Ages 3 to 4 keep the original Slow speed exactly (0.8 of each level's base speed).
+  // v1: speed on level 1 in metres a second. Each older choice gets a little faster on every level, up to 50% faster than
+  // on level 1 by level 30, and a touch more after that. Ages 3 to 4 keep the original Slow speed exactly (0.8 of each
+  // level's base speed).
   // tau: steering smoothing (s), cap: sideways speed limit (times the level's), dead: finger dead zone (px),
   // sens: metres of steering for one screen width, accel: how fast the ball picks up speed, rollIn: start-up time (s),
   // help: falls in one section before the helping hand adds rails, a Bubble Shield, then a Fly bubble, c: how tough the new pieces are.
@@ -599,7 +600,7 @@ h2 {
   const ageOf = () => clamp(save.speed | 0, 0, 3);
   function ageSpeed(age, n, base) {
     if (!age) return 0.8 * base;
-    return AGES[age].v1 * (1 + Math.min(0.5, 0.03 * (n - 1))) * (n > 30 ? 1 + Math.min(0.045, 0.00225 * (n - 30)) : 1);
+    return AGES[age].v1 * (1 + 0.5 * Math.min(1, (n - 1) / 29)) * (n > 30 ? 1 + Math.min(0.045, 0.00225 * (n - 30)) : 1);
   }
 
   // ---------- Sound (made on the fly, started by the first tap) ----------
@@ -2008,7 +2009,9 @@ h2 {
         F.parts = !first && c >= 0.6 && t > 0.3 && rf() < 0.6 ? 2 : 1;
         F.widen = P.age === 0 ? 0.7 : first ? 0.4 : 0;
         F.narrowW = !F.rails && c * t > 0.5 ? +Math.max(2.9, P.width - 0.5).toFixed(2) : 0;
-        F.fol = first ? Math.max(0.85, lerp(1, 0.5, c)) : lerp(1, 0.42, c);
+        // ages 9+ get a little more of each late bend carried (up to 0.1 more by level 30), so the sharpest bends stay
+        // within a quick 9-year-old's reaction time (about 0.4 s)
+        F.fol = first ? Math.max(0.85, lerp(1, 0.5, c)) : lerp(1, 0.42, c) + (c > 0.9 ? 0.1 * smooth(t) : 0);
         F.kb = lerp(1.2, 0.55, c);
         F.body = 1 + F.len * F.parts + 2;
         F.risk = F.rails ? 0 : 1;
@@ -3429,8 +3432,9 @@ h2 {
     const b = ball, lv = lvl;
     b.fwd += (target - b.fwd) * Math.min(1, dt * (b.fwd < target ? AGES[lv.P.age].accel : 4.0));
     steer(dt, -99, 99);
-    const sOld = b.s, cxOld = cxAt(sOld);
-    b.s += b.fwd * dt;
+    // fwd is the speed along the track as it bends sideways, so the ball does not surge through sharp bends
+    const sOld = b.s, cxOld = cxAt(sOld), tx = cxAt(sOld + 0.5) - cxAt(sOld - 0.5);
+    b.s += b.fwd * dt / Math.sqrt(1 + tx * tx);
     // the ball keeps part of its sideways line through curves and bends; the rest is the child's steering
     const fol = arrAt(lv.fol, b.s);
     if (fol < 1) { const d = (cxAt(b.s) - cxOld) * (1 - fol); b.lat -= d; b.tgt -= d; }
@@ -3460,12 +3464,14 @@ h2 {
       b.plat = null;
       if (!tr.gap) railClamp(tr.i, hw);
       collideObstacles(dt);
-      const t2 = trackAt(b.s), f = forgiveVals(), over = Math.abs(b.lat) - t2.w / 2, gy = t2.y + bankAt(b.s) * clamp(b.lat, -t2.w / 2, t2.w / 2);
-      if (!t2.gap && over <= f[0]) { b.teeter = 0; b.y = gy + R; }
+      const t2 = trackAt(b.s), f = forgiveVals(), over = Math.abs(b.lat) - t2.w / 2, bk = bankAt(b.s), gy = t2.y + bk * clamp(b.lat, -t2.w / 2, t2.w / 2);
+      // on a slope or a bank the ball's centre sits a radius out along the deck's normal, a little higher than deck + R
+      const sl = lv.gap[stepAt(b.s + 0.5)] || lv.gap[stepAt(b.s - 0.5)] ? 0 : yAt(b.s + 0.5) - yAt(b.s - 0.5), lift = R * Math.sqrt(1 + sl * sl + bk * bk);
+      if (!t2.gap && over <= f[0]) { b.teeter = 0; b.y = gy + lift; }
       else if (!t2.gap && over <= f[0] + 0.45 && b.teeter < f[1]) {
         if (b.teeter === 0) sfx.teeter();
         b.teeter += dt;
-        b.y = gy + R - clamp((over - f[0]) / 0.45, 0, 1) * 0.22 - Math.abs(Math.sin(gt * 18)) * 0.03;
+        b.y = gy + lift - clamp((over - f[0]) / 0.45, 0, 1) * 0.22 - Math.abs(Math.sin(gt * 18)) * 0.03;
       } else { startFall(); return; }
     }
     // Super Jump: hop by itself onto checked, safe landings
@@ -3601,7 +3607,8 @@ h2 {
     b.fwd += (levelSpeed() * rollIn - b.fwd) * Math.min(1, dt * 2);
     const tr = trackAt(b.s), hw = Math.max(lv.P.width, tr.gap ? 0 : tr.w) / 2, lim = Math.max(0.2, hw - 0.7);   // small islands below never pinch the flight
     steer(dt, f.landing ? -9 : -lim, f.landing ? 9 : lim);
-    b.s += b.fwd * dt;
+    const tx = cxAt(b.s + 0.5) - cxAt(b.s - 0.5);
+    b.s += b.fwd * dt / Math.sqrt(1 + tx * tx);
     const ground = yAt(b.s) + R;
     if (!f.landing) {
       f.h += (2.5 - f.h) * Math.min(1, dt * 2.2);
