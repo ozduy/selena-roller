@@ -1,0 +1,20 @@
+# Apple signing material: keys, certificates and profiles never go into git.
+*.p8
+*.p12
+*.pem
+*.cer
+*.certSigningRequest
+*.mobileprovision
+*.provisionprofile
+*.keychain
+*.keychain-db
+
+# Made by XcodeGen and Xcode during a build
+ios/*.xcodeproj/
+ios/build/
+DerivedData/
+xcuserdata/
+*.xcarchive/
+*.ipa
+*.dSYM.zip
+.DS_Store
