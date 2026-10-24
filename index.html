@@ -1992,8 +1992,8 @@ h2 {
     switch (type) {
       case 'UP': case 'DN': {
         const up = type === 'UP';
-        F.len = Math.round(lerp(up ? 10 : 11, up ? 8 : 9, c)) + (first ? 2 : 0);
-        const grade = Math.min(up ? 0.25 : 0.28, lerp(up ? 0.07 : 0.09, up ? 0.17 : 0.21, c) + g * t * 0.07);
+        F.len = Math.round(lerp(9, up ? 8 : 10, c)) + (first ? 2 : 0);
+        const grade = Math.min(up ? 0.25 : 0.28, lerp(up ? 0.08 : 0.09, up ? 0.17 : 0.21, c) + g * t * 0.07);
         F.h = +(grade * F.len * L).toFixed(2);
         F.narrowW = !F.rails && c * t > 0.3 ? +Math.max(2.8, P.width - 0.8 * c * t).toFixed(2) : 0;
         F.shift = !up && !first && c >= 0.5 && t > 0.2 ? (rf() < 0.5 ? -1 : 1) * lerp(1.6, 3.2, t) : 0;
@@ -2003,7 +2003,7 @@ h2 {
         break;
       }
       case 'TN': {
-        F.len = Math.max(5, Math.round(lerp(9, 6, c)) + (first ? 2 : 0) - Math.round(1.5 * t * g));
+        F.len = Math.max(5, Math.round(lerp(8, 6, c)) + (first ? 2 : 0) - Math.round(1.5 * t * g));
         F.d = lerp(2.4, 5.4, c) * (first ? 0.65 : 0.75 + 0.25 * t);
         F.parts = !first && c >= 0.6 && t > 0.3 && rf() < 0.6 ? 2 : 1;
         F.widen = P.age === 0 ? 0.7 : first ? 0.4 : 0;
@@ -4745,7 +4745,7 @@ h2 {
         const hist = [], ph = (n * 1.7) % TAU, secF = {}, fallAt = [], trace = [], kinds = ['jump', 'fly', 'magnet', 'shield'], replays = [];
         const pieceAt = s => { const i = stepAt(s), c = lvl.chal.find(q => i >= q.s0 - 1 && i <= q.s0 + q.body); return c ? c.type : '-'; };
         let t = 0, falls = 0, nextSpam = 2, spamI = (n * 3) % 4, rescues = 0, flights = 0, hops = 0, lastMode = '';
-        const edge = { m: 9, at: '' };
+        const edge = { m: 9, at: '' }, sink = { d: 9, at: '' };
         while (t < (opts.maxT || 420) && state !== 'complete') {
           t += 1 / 60;
           if (state === 'ready') { state = 'playing'; rollIn = 0; }
@@ -4762,6 +4762,11 @@ h2 {
           if (opts.dive && bonus.type === 'shield' && ball.mode === 'roll') ball.tgt = (Math.floor(t * 0.7) % 2 ? 1 : -1) * (wAt(ball.s) / 2 + 1.6);
           const before = state;
           simStep(1 / 60);
+          if ((ball.mode === 'fly' || ball.mode === 'arc' || ball.mode === 'rescue') && !lvl.gap[stepAt(ball.s)]) {
+            // deepest the ball dipped into the deck while flying or jumping (should never be below 0)
+            const d = ball.y - (yAt(ball.s) + bankAt(ball.s) * clamp(ball.lat, -wAt(ball.s) / 2, wAt(ball.s) / 2) + R);
+            if (d < sink.d) { sink.d = d; sink.at = ball.mode + ':' + pieceAt(ball.s) + '@' + stepAt(ball.s); }
+          }
           if (ball.mode === 'roll' && state === 'playing') {
             // closest the ball came to an open edge (metres of deck left beside it; below 0 it is teetering)
             const i = stepAt(ball.s), hw = wAt(ball.s) / 2, open = ball.lat < 0 ? !lvl.railL[i] : !lvl.railR[i];
@@ -4782,7 +4787,7 @@ h2 {
         res = { level: n, age: lvl.P.age, speed: +levelSpeed().toFixed(2), finished: state === 'complete', time: +t.toFixed(1), falls, sections: lvl.cps.length, maxSectionFalls: maxSec,
           maxReplay: replays.length ? +Math.max(...replays).toFixed(1) : 0, meanReplay: replays.length ? +(replays.reduce((a, b) => a + b, 0) / replays.length).toFixed(1) : 0,
           stars: levelStars, starTotal: lvl.starTotal, obstacles: lvl.obstacles.length, challenges: lvl.chal.length, pieces: lvl.chal.filter(c => c.feat).map(c => c.type + '@' + c.s0),
-          edge: +edge.m.toFixed(2), edgeAt: edge.at,
+          edge: +edge.m.toFixed(2), edgeAt: edge.at, sink: +sink.d.toFixed(2), sinkAt: sink.at,
           fallAt, trace, rescues, flights, hops, end: { s: +ball.s.toFixed(2), step: st, lat: +ball.lat.toFixed(2), mode: ball.mode, state, fwd: +ball.fwd.toFixed(2), gap: lvl.gap[st], kind: lvl.kind[st], near } };
       } finally {
         headless = false; botNoBonus = false; fingerDown = false;
