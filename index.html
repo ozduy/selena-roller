@@ -488,7 +488,7 @@ h2 {
   </div>
 
   <div class="announce" id="announce" hidden><div class="aicon"><svg><use id="aIcon" href="#i-spring"/></svg></div><div class="atext" id="aText">Super Jump!</div></div>
-  <div class="hint" id="hint" hidden><div class="track-line"><div class="finger"></div></div><span>Slide to steer</span></div>
+  <div class="hint" id="hint" hidden><div class="track-line"><div class="finger"></div></div><span>Slide to steer · up for speed</span></div>
   <div class="tapgo" id="tapGo" hidden><div class="tapring"><svg><use href="#i-hand"/></svg></div><span>Tap to go</span></div>
 
   <section class="screen menu" id="menu">
@@ -1952,7 +1952,8 @@ h2 {
   const TYPES = Object.keys(INTRO);
   const PATTERNS = { PAIR: 1, TRIPLE: 1, CURVE: 1 };
   // Crushers: two pads side by side that take turns rising out of the deck (ages 5 and up, from level 8).
-  const AGE_EXTRA = { CR: 8 };
+  // Loose tiles: a zig-zag path of tiles over the drop that shake as the ball comes and fall away behind it.
+  const AGE_EXTRA = { CR: [99, 8], TP: [16, 10] };
   const RHYTHM = ['BS', 'SL', 'SS', 'HH', 'HF', 'SC', 'RS'];
   const CELEB_LISTS = {
     15: ['BS', 'RS', 'SL', 'BO', 'JP', 'BR', 'PR'],
@@ -1978,8 +1979,8 @@ h2 {
       P.obsMult = Math.min(1.25 + 0.0075 * x, 1.4);
       P.cpEvery = Math.round(4.5 * P.speed);
     }
-    // long stages, like the sky runners: about 1.6 times the old length
-    P.len = Math.round(P.len * 1.6);
+    // longer stages than the first version, still short and intense like the sky runners: 1.25 times the old length
+    P.len = Math.round(P.len * 1.25);
     P.celebration = n % 5 === 0 && n !== 30;
     P.grand = n === 30;
     if (n > 30) {
@@ -1995,7 +1996,7 @@ h2 {
     for (const k of TYPES) if (INTRO[k] === n) P.intro = k;
     P.allowed = (n <= 30 && CELEB_LISTS[n]) ? CELEB_LISTS[n].slice() : TYPES.filter(k => INTRO[k] <= n);
     // obstacles only the older choices meet (never the lesson of a level)
-    if (P.age > 0) for (const k in AGE_EXTRA) if (n >= AGE_EXTRA[k]) P.allowed.push(k);
+    for (const k in AGE_EXTRA) if (n >= AGE_EXTRA[k][P.age ? 1 : 0]) P.allowed.push(k);
     P.featured = null;
     if (n > 30) {
       const fr = rng(Math.floor((n - 31) / 10) * 97 + 5), pool = TYPES.filter(k => !PATTERNS[k]);
@@ -2042,7 +2043,7 @@ h2 {
     const plain = P.allowed.filter(k => !PATTERNS[k]);
     if (!plain.length) return units;
     const rhythm = RHYTHM.filter(k => plain.indexOf(k) >= 0);
-    const weight = k => (1 + 0.15 * (INTRO[k] || AGE_EXTRA[k])) * (P.featured && P.featured.indexOf(k) >= 0 ? 3 : 1);
+    const weight = k => (1 + 0.15 * (INTRO[k] || AGE_EXTRA[k][1])) * (P.featured && P.featured.indexOf(k) >= 0 ? 3 : 1);
     const pickOld = (avoid, list) => {
       const pool = (list || plain).filter(k => k !== avoid && k !== P.intro);
       const use = pool.length ? pool : (list || plain);
@@ -2110,6 +2111,7 @@ h2 {
       case 'PR': return { body: 6, dec: 0, risk: 0 };
       case 'PX': return { body: 6, dec: 0, risk: 1 };
       case 'PD': return { body: 10, dec: 0, risk: 1 };
+      case 'TP': { const k = 4 + Math.floor(r() * 2); return { body: 2 + 2 * k + 1, dec: 1, risk: 1, k }; }
     }
     return { body: 3, dec: 1, risk: 0 };
   }
@@ -2122,7 +2124,7 @@ h2 {
   function featCount(n, age) {
     if (n < 2) return 0;
     const k = [n < 10 ? 1 : 2, n < 6 ? 1 : n < 16 ? 2 : 3, n < 5 ? 1 : n < 12 ? 2 : n < 22 ? 3 : 4, n < 4 ? 1 : n < 9 ? 2 : n < 16 ? 3 : n < 24 ? 4 : 5][age];
-    return Math.round((k + (age > 0 && n % 5 === 0 && n !== 30 ? 1 : 0)) * 1.6);
+    return Math.round((k + (age > 0 && n % 5 === 0 && n !== 30 ? 1 : 0)) * 1.4);
   }
   function planFeatures(P, rf) {
     const n = P.n, age = P.age, out = [];
@@ -2373,15 +2375,31 @@ h2 {
           break;
         }
         case 'HH': case 'HF': {
-          const full = type === 'HF', side = hint ? (full ? hint : -hint) : rs, hl = 0.45, need = full ? wBase : 5.25;
+          const full = type === 'HF', side = hint ? (full ? hint : -hint) : rs, wball = r() < 0.5, hl = wball ? 0.62 : 0.45, need = full ? wBase : 5.25;
           if (need > wBase) widen(s0 - 1, s0 + 4, need - wBase);
           const wl = Math.max(wBase, need), lp = 3.3;
           let c, A, safe;
           if (full) { c = 0; A = wl / 2 - hl - 0.06; safe = side * (wl / 2 - 0.8); }
           else { const lo = hl + 0.08, hi = wl / 2 - hl - 0.06; c = side * (lo + hi) / 2; A = (hi - lo) / 2; safe = -side * wl / 4; }
-          ob({ type: 'hammer', s: (s0 + 2.5) * L, lat: c, lp, thm: Math.asin(Math.min(0.95, A / lp)), period: Math.max(3.2 * 1.2, 4.5 / mult), phase: r(), hl, rad: 0.42, safe, span: wl, tune: full });
+          ob({ type: 'hammer', s: (s0 + 2.5) * L, lat: c, lp, thm: Math.asin(Math.min(0.95, A / lp)), period: Math.max(3.2 * 1.2, 4.5 / mult), phase: r(), hl, rad: wball ? 0.62 : 0.42, wball, safe, span: wl, tune: full });
           key(s0 + 0.25, s0 + 4, safe); starLine(s0, 5, 1.1, safe); safeOut = safe;
           busyR(s0, s0 + 3); rankR(s0, s0 + 3); straightR(s0 - 3, s0 + 6);
+          break;
+        }
+        case 'TP': {
+          // loose tiles over the drop, two steps each, stepping out to one side and back; the star line runs down them
+          const k = f.k, tw = +Math.max(1.7, Math.min(2.4, wBase - 0.7)).toFixed(2), a = s0 + 2, side = hint || rs, amp = Math.min(1.3, 0.55 * tw);
+          forceR(s0 - 3, s0 + 1, 1);
+          for (let q = 0; q < k; q++) {
+            const st = a + 2 * q, c = +(side * amp * Math.sin(Math.PI * q / (k - 1))).toFixed(2);
+            for (let j = st; j < st + 2; j++) { lv.gap[j] = 1; lv.kind[j] = 6; }
+            lv.platforms.push({ s0: st * L, s1: (st + 2) * L, step0: st, w: tw, A: 0, c, d: 1, rest: 1, period: 4, phase: 0, railed: false, off: c, dOff: 0, slow: 1, len: 2, crumble: true, fallT: 0 });
+            key(st + 1, st + 1, c);
+          }
+          const exit = a + 2 * k;
+          forceR(exit, exit + 2, 1);
+          straightR(s0 - 3, exit + 4); busyR(s0 - 1, exit + 2); rankR(s0, exit + 2); noHopR(s0 - 2, exit);
+          key(s0 - 2, a - 0.5, 0); key(exit + 0.5, exit + 3, 0); starLine(exit + 0.5, 3, 1, 0);
           break;
         }
         case 'PR': case 'PX': case 'PD': {
@@ -2769,7 +2787,7 @@ h2 {
       const unlocked = t => n >= P.unlock[t];
       const nearIntro = s => (lv.introStep >= 0 && s >= lv.introStep - 6 && s <= lv.introEnd + 1) || (lv.fIntroStep >= 0 && s >= lv.fIntroStep - 6 && s <= lv.fIntroEnd + 1);
       const helpFor = t => {
-        if (t === 'BR' || t === 'B1' || t === 'BX' || t === 'PR' || t === 'PX' || t === 'PD' || t === 'TN') return unlocked('shield') ? 'shield' : 'magnet';
+        if (t === 'BR' || t === 'B1' || t === 'BX' || t === 'TP' || t === 'PR' || t === 'PX' || t === 'PD' || t === 'TN') return unlocked('shield') ? 'shield' : 'magnet';
         if (t === 'BO' || t === 'UP' || t === 'DN') return 'magnet';
         if (t === 'IS' || t === 'RJ') return unlocked('jump') && r() < 0.5 ? 'jump' : unlocked('shield') ? 'shield' : 'magnet';
         const air = r() < 0.5 ? 'fly' : 'jump';
@@ -3183,6 +3201,7 @@ h2 {
   const SPOST_GEO = new THREE.CylinderGeometry(0.17, 0.21, 1, 16).translate(0, 0.5, 0);
   const HUB_GEO = new THREE.CylinderGeometry(0.25, 0.25, 0.14, 18);
   const PIVOT_H = 4.1;
+  const WBALL_GEO = new THREE.SphereGeometry(0.62, 28, 18);
 
   const ease = t => 0.6 * t + 0.4 * smooth(t);
   function cyc(u, rest, d) {
@@ -3199,7 +3218,7 @@ h2 {
     else if (o.type === 'hammer') { o.th = o.thm * Math.sin(TAU * (o.phase + tau / o.period)); o.cl = o.lat + o.lp * Math.sin(o.th); o.hy = o.y0 + PIVOT_H - o.lp * Math.cos(o.th); }
     else o.cl = o.lat;
   }
-  function platOffset(p, tau) { return lerp(-p.A, p.A, cyc(frac(p.phase + tau / p.period) * p.period, p.rest, p.d)); }
+  function platOffset(p, tau) { return (p.c || 0) + lerp(-p.A, p.A, cyc(frac(p.phase + tau / p.period) * p.period, p.rest, p.d)); }
   // Distance from a ball at (lat, ds) to the obstacle surface, minus the ball radius (local plane: x = lat, z = -ds).
   function obsClear(o, lat, ds) {
     const bz = -ds;
@@ -3264,23 +3283,24 @@ h2 {
     const pole = new THREE.InstancedMesh(POLE_GEO, MAT.metalI, Math.max(1, hammers.length));
     const head = new THREE.InstancedMesh(DRUM_GEO, MAT.cushion, Math.max(1, hammers.length));
     const caps = new THREE.InstancedMesh(DRUMCAP_GEO, MAT.capPaint, Math.max(1, hammers.length * 2));
-    pole.count = head.count = hammers.length; caps.count = hammers.length * 2;
-    for (const m of [pole, head, caps]) { m.castShadow = true; m.receiveShadow = true; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); }
-    group.add(cm, am, spm, hub, pole, head, caps);
-    disp.push(cm, am, spm, hub, pole, head, caps);
-    lv.props = { cushions, spinners, hammers, cm, am, pole, head, caps, M };
+    const wb = new THREE.InstancedMesh(WBALL_GEO, MAT.cushion, Math.max(1, hammers.length));
+    pole.count = head.count = wb.count = hammers.length; caps.count = hammers.length * 2;
+    for (const m of [pole, head, caps, wb]) { m.castShadow = true; m.receiveShadow = true; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); }
+    group.add(cm, am, spm, hub, pole, head, caps, wb);
+    disp.push(cm, am, spm, hub, pole, head, caps, wb);
+    lv.props = { cushions, spinners, hammers, cm, am, pole, head, caps, wb, M };
     for (const o of obs) o.pr = lv.props;
     if (metal.length) { const g = mergeGeometries(metal), m = new THREE.Mesh(g, MAT.trim); m.castShadow = true; m.receiveShadow = true; m.matrixAutoUpdate = false; group.add(m); disp.push(g); }
     if (paint.length) { const g = mergeGeometries(paint), m = new THREE.Mesh(g, MAT.capPaint); m.castShadow = true; m.receiveShadow = true; m.matrixAutoUpdate = false; group.add(m); disp.push(g); }
     for (const o of obs) writeObstacle(o, true);
-    cm.instanceMatrix.needsUpdate = am.instanceMatrix.needsUpdate = pole.instanceMatrix.needsUpdate = head.instanceMatrix.needsUpdate = caps.instanceMatrix.needsUpdate = true;
+    cm.instanceMatrix.needsUpdate = am.instanceMatrix.needsUpdate = pole.instanceMatrix.needsUpdate = head.instanceMatrix.needsUpdate = caps.instanceMatrix.needsUpdate = wb.instanceMatrix.needsUpdate = true;
 
     // Moving platforms: a wooden ride with a painted frame and rails when railed. Each width gets its own meshes,
     // so what is drawn always matches the platform the ball rides (railed and open platforms can differ in width).
     if (lv.platforms.length) {
-      const deck = deckSet(W.deck), len = 3 * L - 0.12, sets = {};
-      const setFor = w => {
-        const key = w.toFixed(2);
+      const deck = deckSet(W.deck), sets = {};
+      const setFor = (w, steps) => {
+        const len = steps * L - 0.12, key = w.toFixed(2) + '_' + steps;
         if (sets[key]) return sets[key];
         const hw = w / 2;
         const top = new THREE.PlaneGeometry(w - 0.16, len).rotateX(-Math.PI / 2).translate(0, 0, -len / 2 - 0.06);
@@ -3302,7 +3322,7 @@ h2 {
       };
       const beamParts = [];
       for (const p of lv.platforms) {
-        const gs = setFor(p.w), g = new THREE.Group();
+        const gs = setFor(p.w, p.len || 3), g = new THREE.Group();
         const t = new THREE.Mesh(gs.top, deck.mat); t.receiveShadow = true;
         const f = new THREE.Mesh(gs.frame, MAT.capPaint); f.castShadow = true; f.receiveShadow = true;
         g.add(t, f);
@@ -3310,9 +3330,9 @@ h2 {
         p.cx0 = sampleLv(lv, lv.cx, p.s0);
         g.position.set(p.cx0, p.y, -p.s0);
         group.add(g); p.mesh = g;
-        for (const zz of [p.s0 + 0.4, p.s1 - 0.4]) { const MM = new THREE.Matrix4(); MM.compose(_p0.set(p.cx0, p.y - 0.62, -zz), _q0.identity(), _s0.set(p.w + 2 * p.A + 0.6, 0.12, 0.16)); beamParts.push({ geometry: UNIT_BOX, matrix: MM }); }
+        if (!p.crumble) for (const zz of [p.s0 + 0.4, p.s1 - 0.4]) { const MM = new THREE.Matrix4(); MM.compose(_p0.set(p.cx0, p.y - 0.62, -zz), _q0.identity(), _s0.set(p.w + 2 * p.A + 0.6, 0.12, 0.16)); beamParts.push({ geometry: UNIT_BOX, matrix: MM }); }
       }
-      const bg = mergeGeometries(beamParts), bm = new THREE.Mesh(bg, MAT.trim); bm.receiveShadow = true; bm.matrixAutoUpdate = false; group.add(bm); disp.push(bg);
+      if (beamParts.length) { const bg = mergeGeometries(beamParts), bm = new THREE.Mesh(bg, MAT.trim); bm.receiveShadow = true; bm.matrixAutoUpdate = false; group.add(bm); disp.push(bg); }
     }
 
     // Ring gates: red and white hoops standing round the deck, their lower half passing under it.
@@ -3386,9 +3406,15 @@ h2 {
       _q0.setFromEuler(_e0.set(0, 0, o.th));
       M.compose(_p0.set(px, py, o.z), _q0, _s0.set(1, o.lp - o.rad + 0.05, 1)); pr.pole.setMatrixAt(o.ii, M);
       const hx = px + o.lp * sn, hy = py - o.lp * cs;
-      M.compose(_p0.set(hx, hy, o.z), _q0, _s0.set(1, 1, 1)); pr.head.setMatrixAt(o.ii, M);
-      for (let k = 0; k < 2; k++) { const sd = k ? 1 : -1; M.compose(_p0.set(hx + sd * 0.48 * cs, hy + sd * 0.48 * sn, o.z), _q0, _s0.set(1, 1, 1)); pr.caps.setMatrixAt(o.ii * 2 + k, M); }
-      pr.pole.instanceMatrix.needsUpdate = pr.head.instanceMatrix.needsUpdate = pr.caps.instanceMatrix.needsUpdate = true;
+      if (o.wball) {
+        pr.head.setMatrixAt(o.ii, HIDE); pr.caps.setMatrixAt(o.ii * 2, HIDE); pr.caps.setMatrixAt(o.ii * 2 + 1, HIDE);
+        M.compose(_p0.set(hx, hy, o.z), _q0, _s0.set(1, 1, 1)); pr.wb.setMatrixAt(o.ii, M);
+      } else {
+        M.compose(_p0.set(hx, hy, o.z), _q0, _s0.set(1, 1, 1)); pr.head.setMatrixAt(o.ii, M);
+        for (let k = 0; k < 2; k++) { const sd = k ? 1 : -1; M.compose(_p0.set(hx + sd * 0.48 * cs, hy + sd * 0.48 * sn, o.z), _q0, _s0.set(1, 1, 1)); pr.caps.setMatrixAt(o.ii * 2 + k, M); }
+        pr.wb.setMatrixAt(o.ii, HIDE);
+      }
+      pr.pole.instanceMatrix.needsUpdate = pr.head.instanceMatrix.needsUpdate = pr.caps.instanceMatrix.needsUpdate = pr.wb.instanceMatrix.needsUpdate = true;
       o.hy = hy;
     }
   }
@@ -3590,7 +3616,9 @@ h2 {
   };
   let state = 'menu', prevState = 'playing', stateTimer = 0, gt = 0, levelStars = 0, lastCp = 0, lastCpIdx = 0, rollIn = 1;
   let hintTimer = 0, steerTotal = 0, fingerDown = false, idleT = 0, assistBoost = false, helpedSections = 0, cleanSection = true, lastBumpT = 0;
-  const input = { keyL: false, keyR: false };
+  const input = { keyL: false, keyR: false, keyU: false, keyD: false };
+  // throttle: -1 (slide down, slowest) to 1 (slide up, fastest); speedF follows it smoothly
+  let throttle = 0, speedF = 1;
   const levelSpeed = () => lvl.P.vel * (1 + lvl.P.ramp * clamp((ball.s - START_S) / (lvl.finish * L), 0, 1));
   const bankAt = s => lvl.banked ? arrAt(lvl.bank, s) : 0;
   function autoCentreTime() {
@@ -3613,7 +3641,7 @@ h2 {
   function resetBallAt(s) {
     const b = ball;
     b.s = s; b.lat = 0; b.tgt = 0; b.latV = 0; b.vy = 0; b.fwd = 0; b.mode = 'roll';
-    b.boostT = 0; b.boostF = 1; b.bumpT = 0; b.holdT = 0; b.ghostT = 0; b.tempRail = 0; b.teeter = 0; b.hopCool = 0; b.squash = 0; b.plat = null; b.slopeF = 1;
+    b.boostT = 0; b.boostF = 1; b.bumpT = 0; b.holdT = 0; b.ghostT = 0; b.tempRail = 0; b.teeter = 0; b.hopCool = 0; b.squash = 0; b.plat = null; b.slopeF = 1; speedF = 1;
     b.y = yAt(s) + R; b.z = -s; b.x = cxAt(s);
     vt = s / lvl.P.speed;
     for (const p of lvl.platforms) { p.off = platOffset(p, (vt - p.s0 / lvl.P.speed) * p.slow); p.offLast = p.off; }
@@ -3803,7 +3831,7 @@ h2 {
         nx = ex / d; nz = ez / d; pen = m - d; hz = o.arm;
       } else {
         let hx;
-        if (o.type === 'hammer') { if (by + R < o.hy - 0.42 || by - R > o.hy + 0.42) continue; hx = o.hl; hz = o.rad; }
+        if (o.type === 'hammer') { if (by + R < o.hy - o.rad || by - R > o.hy + o.rad) continue; hx = o.hl; hz = o.rad; }
         else if (o.type === 'crusher') { if (o.hc < 0.3 || by - R > o.y0 + o.hc - 0.1) continue; hx = o.hw; hz = o.hd; }
         else { if (by - R > o.y0 + o.h) continue; hx = o.hw; hz = o.hd; }
         const px = clamp(dx, -hx, hx), pz = clamp(dz, -hz, hz), ex = dx - px, ez = dz - pz, d = Math.hypot(ex, ez);
@@ -4033,7 +4061,9 @@ h2 {
       b.slopeF += (m - b.slopeF) * Math.min(1, dt * (m < b.slopeF ? (m < 0.995 ? 1.8 : 0.8) : 1.2));
     } else b.slopeF += (1 - b.slopeF) * Math.min(1, dt * 0.8);
     let target = 0;
-    if (state === 'playing') target = levelSpeed() * b.slopeF * b.boostF * (b.bumpT > 0 ? lerp(1, 0.45, b.bumpT / 0.5) : 1) * rollIn;
+    const thr = input.keyU ? 1 : input.keyD ? -1 : throttle;
+    speedF += ((thr >= 0 ? 1 + 0.35 * thr : 1 + 0.4 * thr) - speedF) * Math.min(1, dt * 3);
+    if (state === 'playing') target = levelSpeed() * speedF * b.slopeF * b.boostF * (b.bumpT > 0 ? lerp(1, 0.45, b.bumpT / 0.5) : 1) * rollIn;
     else if (state === 'finishing') target = levelSpeed() * 0.55 * Math.max(0, stateTimer / 1.8);
     if (b.boostT > 0) { b.boostT -= dt; b.boostF = Math.min(1.28, b.boostF + dt / 0.4 * 0.28); }
     else b.boostF = Math.max(1, b.boostF - dt * 0.28);
@@ -4787,26 +4817,29 @@ h2 {
   // ---------- Input: slide to steer, arrow keys or A/D ----------
   // Only one finger steers: a second finger or a resting palm can tap to go but never moves the ball,
   // and lifting it does not stop the steering finger.
-  let dragging = false, lastPX = 0, dragAcc = 0, dragActive = false, activeId = null;
+  let dragging = false, lastPX = 0, dragAcc = 0, dragActive = false, activeId = null, startPY = 0;
   const pxToM = () => AGES[ageOf()].sens / clamp(viewW, 320, 1200);
   canvas.addEventListener('pointerdown', e => {
     audio();
     if (activeId !== null && !e.isPrimary) { if (state === 'ready') go(); return; }
     activeId = e.pointerId;
-    dragging = true; fingerDown = true; lastPX = e.clientX; dragAcc = 0; dragActive = false;
+    dragging = true; fingerDown = true; lastPX = e.clientX; dragAcc = 0; dragActive = false; startPY = e.clientY;
     try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
     if (state === 'ready') go();
   });
   canvas.addEventListener('pointermove', e => {
     if (!dragging || e.pointerId !== activeId) return;
     let dx = e.clientX - lastPX; lastPX = e.clientX;
+    // up and down sets the speed: past a small dead zone, a slide of about a sixth of the screen is full speed or slowest
+    const dy = startPY - e.clientY, dzY = 24;
+    throttle = Math.abs(dy) < dzY ? 0 : clamp((dy - Math.sign(dy) * dzY) / Math.max(90, viewH * 0.16), -1, 1);
     // a small dead zone tells a tap from a slide; the movement past it still steers, so the ball never lags the finger
     if (!dragActive) { dragAcc += dx; const dz = AGES[ageOf()].dead; if (Math.abs(dragAcc) < dz) return; dragActive = true; dx = dragAcc - Math.sign(dragAcc) * dz; }
     if (state === 'playing') { ball.tgt += dx * pxToM(); steerTotal += Math.abs(dx); }
   });
   const endDrag = e => {
     if (e && e.pointerId != null && e.pointerId !== activeId) return;
-    activeId = null; dragging = false; fingerDown = false;
+    activeId = null; dragging = false; fingerDown = false; throttle = 0;
   };
   canvas.addEventListener('pointerup', e => { audio(); endDrag(e); });   // a finger lift counts as a tap for unlocking sound
   canvas.addEventListener('pointercancel', endDrag);
@@ -4816,6 +4849,8 @@ h2 {
     const k = e.key, onButton = document.activeElement && document.activeElement.tagName === 'BUTTON';
     if (k === 'ArrowLeft' || k === 'a' || k === 'A') { input.keyL = true; steerTotal += 20; if (state === 'ready') go(); }
     else if (k === 'ArrowRight' || k === 'd' || k === 'D') { input.keyR = true; steerTotal += 20; if (state === 'ready') go(); }
+    else if (k === 'ArrowUp' || k === 'w' || k === 'W') { input.keyU = true; if (state === 'ready') go(); }
+    else if (k === 'ArrowDown' || k === 's' || k === 'S') { input.keyD = true; if (state === 'ready') go(); }
     else if (k === 'Escape' || k === 'p' || k === 'P') { if (state === 'paused') resume(); else pause(); }
     else if (k === 'Enter' || k === ' ') {
       if (onButton && state !== 'playing' && state !== 'ready') return;
@@ -4831,8 +4866,10 @@ h2 {
   window.addEventListener('keyup', e => {
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') input.keyL = false;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') input.keyR = false;
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') input.keyU = false;
+    if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') input.keyD = false;
   });
-  window.addEventListener('blur', () => { input.keyL = input.keyR = false; endDrag(); });
+  window.addEventListener('blur', () => { input.keyL = input.keyR = input.keyU = input.keyD = false; endDrag(); });
 
   // The menu is on screen before start-up has finished (it waits a moment for the web font): a tap there finishes it first.
   $('playBtn').addEventListener('click', startPlay);
@@ -4895,6 +4932,16 @@ h2 {
     updateCamera(dt, false);
     sky.position.copy(camera.position);
     if (mountains) mountains.position.set(camera.position.x, 0, camera.position.z);
+    if (lvl) for (const p of lvl.platforms) {
+      if (!p.crumble || !p.mesh) continue;
+      if (ball.s > p.s1 + 0.3 && (state === 'playing' || state === 'finishing' || state === 'falling')) p.fallT += dt;
+      else if (ball.s < p.s0 - 0.5) p.fallT = 0;
+      const near = p.s0 - ball.s, shake = !p.fallT && near < 6 && ball.s < p.s1 ? Math.sin(gt * 55 + p.s0) * 0.035 : 0;
+      p.mesh.position.y = p.y - 0.5 * G * p.fallT * p.fallT + shake;
+      p.mesh.rotation.z = p.fallT * 0.9 * (p.c >= 0 ? 1 : -1);
+      p.mesh.rotation.x = p.fallT * 0.4;
+      p.mesh.visible = p.fallT < 2.5;
+    }
     if (scenery) for (const b of scenery.userData.balloons) { b.position.y = b.userData.y0 + Math.sin(gt * 0.45 + b.userData.ph) * 0.9; b.rotation.y += dt * 0.05; }
     _focus.set(ball.x, ball.y, ball.z - SH * 0.5); updateSun(_focus);
     seaMat.uniforms.uTime.value = gt % 1000;
