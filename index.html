@@ -13,9 +13,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <title>Selena Roller</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800;900&display=swap">
+<link rel="stylesheet" href="fonts/rubik.css">
 <style>
 [hidden] { display: none !important; }
 html, body { margin: 0; }
@@ -138,6 +136,21 @@ h2 {
   background: linear-gradient(180deg, #8fe3ff, #2d9bff 60%, #1f6fe0);
 }
 .bar .flag { position: absolute; right: -6px; top: 50%; width: 22px; height: 22px; margin-top: -15px; filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.35)); }
+/* Narrower phones: slightly tighter spacing and text in the top bar, so the world name still fits next to a
+   two-digit level and a three-digit star count (otherwise it is cut short, for example "Cloud King..."). */
+@media (max-width: 429px) {
+  .hud { gap: 8px; }
+  .lvlbox { padding: 6px 10px 9px; }
+  .lvltop { gap: 6px; }
+  .lvllabel { font-size: 15px; letter-spacing: 0.01em; }
+  .lvlworld { font-size: 13px; }
+  .hud .pill { gap: 4px; padding: 6px 11px 6px 6px; font-size: 18px; }
+  .hud .pill svg { width: 26px; height: 26px; }
+}
+@media (max-width: 380px) {
+  .lvllabel { font-size: 14px; }
+  .lvlworld { font-size: 12px; }
+}
 
 .hud2 {
   position: absolute; left: 0; right: 0; box-sizing: border-box;
@@ -259,6 +272,11 @@ h2 {
   box-shadow: 0 4px 0 var(--gold-deep), inset 0 2px 0 rgba(255, 255, 255, 0.55);
 }
 .agehint { margin: -4px 0 0; font-size: 15px; font-weight: 700; color: var(--muted); text-align: center; }
+.menulinks { margin: -8px 0 -10px; display: flex; justify-content: center; align-items: center; font-size: 14px; font-weight: 700; color: var(--muted); }
+.menulinks a { color: inherit; text-decoration: none; padding: 7px 12px; border-radius: 12px; }
+.menulinks a:active { background: var(--chip); }
+.menulinks a:focus-visible { outline: 3px solid var(--gold); outline-offset: -2px; }
+.offlinenote { margin: -6px 0 -8px; font-size: 13px; font-weight: 800; color: #1f9d55; text-align: center; }
 .row { display: flex; gap: 10px; align-items: stretch; }
 .chip {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex: 1 1 0; min-width: 0;
@@ -488,7 +506,7 @@ h2 {
   </div>
 
   <div class="announce" id="announce" hidden><div class="aicon"><svg><use id="aIcon" href="#i-spring"/></svg></div><div class="atext" id="aText">Super Jump!</div></div>
-  <div class="hint" id="hint" hidden><div class="track-line"><div class="finger"></div></div><span>Slide to steer</span></div>
+  <div class="hint" id="hint" hidden><div class="track-line"><div class="finger"></div></div><span>Slide to steer · up for speed</span></div>
   <div class="tapgo" id="tapGo" hidden><div class="tapring"><svg><use href="#i-hand"/></svg></div><span>Tap to go</span></div>
 
   <section class="screen menu" id="menu">
@@ -516,6 +534,9 @@ h2 {
         <button class="chip" id="soundBtn"><svg><use id="soundIcon" href="#i-sound"/></svg><span id="soundLabel">Sound on</span></button>
         <div class="pill"><svg><use href="#i-star"/></svg><span id="menuStars">0</span></div>
       </div>
+      <!-- Full addresses: the iPhone app opens these in Safari (a relative link would point inside the app). -->
+      <p class="menulinks"><a href="https://ozduy.github.io/selena-roller/support.html" target="_blank" rel="noopener">Help</a><span aria-hidden="true">&middot;</span><a href="https://ozduy.github.io/selena-roller/privacy.html" target="_blank" rel="noopener">Privacy</a></p>
+      <p class="offlinenote" id="offlineNote" hidden>&#10003; Ready to play offline</p>
     </div>
   </section>
 
@@ -594,7 +615,8 @@ h2 {
     };
   }
   const lin = hex => new THREE.Color(hex).convertSRGBToLinear();
-  const DEBUG = (() => { try { return /debug/i.test(String(window.location.href)); } catch (e) { return false; } })();
+  const IN_APP = location.protocol === 'selenaroller:';   // the iPhone app serves the game from selenaroller://localhost/
+  const DEBUG = !IN_APP && (() => { try { return /debug/i.test(String(window.location.href)); } catch (e) { return false; } })();
   let headless = false;   // true while the test bot runs a level without drawing
 
   // ---------- Saved progress (this device only) ----------
@@ -613,14 +635,17 @@ h2 {
   // sens: metres of steering for one screen width, accel: how fast the ball picks up speed, rollIn: start-up time (s),
   // help: falls in one section before the helping hand adds rails, a Bubble Shield, then a Fly bubble, c: how tough the new pieces are.
   const AGES = [
-    { range: '3-4', word: 'Gentle', icon: '#i-turtle', hint: 'Gentle speed for ages 3 to 4', v1: 0, tau: 0.085, cap: 1.15, dead: 4, sens: 8, accel: 2.3, rollIn: 0.6, help: [1, 2, 3], c: 0 },
-    { range: '5-6', word: 'Quick', icon: '#i-bunny', hint: 'Quick speed for ages 5 to 6', v1: 4.6, tau: 0.07, cap: 1.45, dead: 3, sens: 8.5, accel: 2.8, rollIn: 0.5, help: [2, 3, 4], c: 0.35 },
-    { range: '7-8', word: 'Fast', icon: '#i-fox', hint: 'Fast speed for ages 7 to 8', v1: 5.6, tau: 0.06, cap: 1.7, dead: 2, sens: 9, accel: 3.2, rollIn: 0.45, help: [3, 4, 5], c: 0.7 },
-    { range: '9+', word: 'Turbo', icon: '#i-cheetah', hint: 'Turbo speed for ages 9 and up', v1: 6.6, tau: 0.05, cap: 1.95, dead: 2, sens: 9.5, accel: 3.6, rollIn: 0.4, help: [3, 4, 5], c: 1 }
+    { range: '3-4', word: 'Gentle', icon: '#i-turtle', hint: 'Gentle speed for ages 3 to 4', v1: 0, tau: 0.085, cap: 1.15, dead: 4, sens: 8, accel: 2.3, rollIn: 0.6, help: [2, 3, 4], c: 0 },
+    { range: '5-6', word: 'Quick', icon: '#i-bunny', hint: 'Quick speed for ages 5 to 6', v1: 5.0, tau: 0.07, cap: 1.5, dead: 3, sens: 8.5, accel: 2.8, rollIn: 0.5, help: [3, 4, 5], c: 0.45 },
+    { range: '7-8', word: 'Fast', icon: '#i-fox', hint: 'Fast speed for ages 7 to 8', v1: 6.05, tau: 0.06, cap: 1.75, dead: 2, sens: 9, accel: 3.2, rollIn: 0.45, help: [4, 5, 6], c: 0.8 },
+    { range: '9+', word: 'Turbo', icon: '#i-cheetah', hint: 'Turbo speed for ages 9 and up', v1: 7.1, tau: 0.05, cap: 2.0, dead: 2, sens: 9.5, accel: 3.6, rollIn: 0.4, help: [4, 5, 6], c: 1 }
   ];
   const ageOf = () => clamp(save.speed | 0, 0, 3);
+  // Each level plays as a further stage of the difficulty plan: level 1 already starts at stage 3 (ages 3-4) up to
+  // stage 10 (ages 9+), and every level moves 1.5 to 1.8 stages on. Past stage 30 the endless plan takes over.
+  function stageOf(level, age) { return level + [2, 5, 7, 9][age] + Math.floor((level - 1) * [0.5, 0.6, 0.7, 0.8][age]); }
   function ageSpeed(age, n, base) {
-    if (!age) return 0.8 * base;
+    if (!age) return base;
     return AGES[age].v1 * (1 + 0.5 * Math.min(1, (n - 1) / 29)) * (n > 30 ? 1 + Math.min(0.045, 0.00225 * (n - 30)) : 1);
   }
 
@@ -734,7 +759,9 @@ h2 {
   let renderer = null;
   try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance', stencil: false }); } catch (e) { renderer = null; }
   if (!renderer) {
-    $('menu').innerHTML = '<div class="panel center nogl"><h2>3D is switched off</h2><p>This browser could not start 3D graphics. Try opening the link in Chrome or Safari.</p></div>';
+    $('menu').innerHTML = IN_APP
+      ? '<div class="panel center nogl"><h2>3D could not start</h2><p>The 3D view could not start. Close Selena Roller fully and open it again.</p></div>'
+      : '<div class="panel center nogl"><h2>3D is switched off</h2><p>This browser could not start 3D graphics. Try opening the link in Chrome or Safari.</p></div>';
     $('who').hidden = true; $('menu').hidden = false;
     return;
   }
@@ -1142,7 +1169,21 @@ h2 {
       sea: { deep: 0x061428, sky: 0x2c3c6c, glint: 1 },
       land: { kind: 'islands', sand: 0x6a6a7a, grass: 0x2f4a4a, rock: 0x45475a, snow: 0xc8d2e8, snowLine: 0.75, lights: true },
       cloud: { top: 0x8a9cc8, bottom: 0x2e3a66, a: 0.35, b: 0.28 },
-      deck: 'stone', body: 0x2c3d78, under: 0x0d1430, rail: 0x2fd3c4, stripe: 0xffffff, bridge: 'steel', trimGlow: 0xffa640 }
+      deck: 'stone', body: 0x2c3d78, under: 0x0d1430, rail: 0x2fd3c4, stripe: 0xffffff, bridge: 'steel', trimGlow: 0xffa640 },
+    { name: 'Sky City',
+      sky: { zenith: 0x2f8ff0, horizon: 0xd6f0ff, ground: 0x9fb4c6, sun: 0xfff6e6, el: 55, az: -20, size: 0.03, sunI: 1.5, glow: 1.0, glowH: 0.2, stars: 0, envSun: 20, envBoost: 1.05 },
+      light: { color: 0xfff4e6, i: 2.7 }, exposure: 1.02, envI: 1.25, fog: [80, 1500],
+      sea: { deep: 0x3c5a72, sky: 0xb8d4e6, glint: 0.6 },
+      land: { kind: 'city', sand: 0xd8dde4, grass: 0x7fa86a, rock: 0x9aa4ae, snow: 0xffffff, snowLine: 0.9 },
+      cloud: { top: 0xffffff, bottom: 0xc8dcec, a: 0.3, b: 0.2 },
+      deck: 'oak', body: 0x2aa8e0, under: 0x163a52, rail: 0xe8343a, stripe: 0xffffff, bridge: 'steel', trimGlow: 0 },
+    { name: 'Rainbow Heights',
+      sky: { zenith: 0x1d78e8, horizon: 0xc4ecff, ground: 0x5fa8d0, sun: 0xfff6e0, el: 58, az: 22, size: 0.03, sunI: 1.5, glow: 1.0, glowH: 0.2, stars: 0, envSun: 20, envBoost: 1.05 },
+      light: { color: 0xfff4e4, i: 2.7 }, exposure: 1.02, envI: 1.25, fog: [70, 1700],
+      sea: { deep: 0x0a5a8c, sky: 0xa6dcf2, glint: 1 },
+      land: { kind: 'floating', sand: 0xe8d6a8, grass: 0x4fb83f, rock: 0x9a7a62, snow: 0xffffff, snowLine: 0.9 },
+      cloud: { top: 0xffffff, bottom: 0xbcd8ec, a: 0.6, b: 0.45 },
+      deck: 'marble', body: 0x8a5cff, under: 0x2a1a5c, rail: 0x14a99c, stripe: 0xffffff, bridge: 'steel', trimGlow: 0 }
   ];
   // Safe rails never use the yellow and black of the open-edge line, or the orange of the obstacles.
   // Bridges are solid and light in every world (see-through glass hid the narrowest walkway).
@@ -1359,10 +1400,19 @@ h2 {
   const puffs = new THREE.InstancedMesh(QUAD, puffMat, PUFFS);
   puffs.renderOrder = -1;
   scene.add(puffs);
-  function placePuffs(lenM, seed) {
+  // About a third drift beside the course at its own height, so the ball rolls through the clouds rather than above them.
+  function placePuffs(lenM, seed, lv) {
     const r = rng(seed), m = new THREE.Matrix4(), q = new THREE.Quaternion(), p = new THREE.Vector3(), s = new THREE.Vector3();
     for (let i = 0; i < PUFFS; i++) {
-      const side = r() < 0.5 ? -1 : 1, size = 26 + r() * 70;
+      const side = r() < 0.5 ? -1 : 1;
+      if (lv && i < 16) {
+        const size = 8 + r() * 14, ss = (i + r()) / 16 * lenM, hw = sampleLv(lv, lv.w, ss) / 2;
+        p.set(sampleLv(lv, lv.cx, ss) + side * (hw + 0.9 * size + 7 + r() * 30), sampleLv(lv, lv.y, ss) - 9 + r() * 11, -ss);
+        s.set(size * 1.8, size, 1);
+        puffs.setMatrixAt(i, m.compose(p, q, s));
+        continue;
+      }
+      const size = 26 + r() * 70;
       p.set(side * (34 + r() * 260), -26 + r() * 30, 120 - r() * (lenM + 700));
       s.set(size * 1.8, size, 1);
       puffs.setMatrixAt(i, m.compose(p, q, s));
@@ -1437,13 +1487,99 @@ h2 {
     if (scenery) { scene.remove(scenery); scenery.traverse(o => { if (o.geometry) o.geometry.dispose(); }); scenery = null; }
     if (mountains) { scene.remove(mountains); mountains.geometry.dispose(); mountains = null; }
   }
-  function buildScenery(W, lenM, seed) {
+  // Floating islands beside the course at about its height, in every world: grass (snow in the ice world) on top, rock
+  // hanging below and a few trees on the bigger ones. They keep well clear of the deck so they never hide the way ahead.
+  function nearIslands(lv, W, r, pal, sunC, fillC, parts) {
+    if (W.land.kind === 'city') return;
+    const ice = W.land.kind === 'ice', lenM = lv.N * L, one = c => ({ sand: c, grass: c, rock: c, snow: c });
+    const topPal = one(ice ? pal.snow : pal.grass), rockPal = one(ice ? lin(0x9cc4dc) : pal.rock), treePal = one(ice ? lin(0x2f6a5a) : pal.grass.clone().multiplyScalar(0.62));
+    let z = 25 + r() * 20;
+    while (z < lenM + 60) {
+      const ss = clamp(z, 0, lenM - 1), side = r() < 0.5 ? -1 : 1, rad = 4 + r() * 10, far = r();
+      const x = sampleLv(lv, lv.cx, ss) + side * (sampleLv(lv, lv.w, ss) / 2 + rad * 1.25 + 6 + far * 55);
+      const y = sampleLv(lv, lv.y, ss) - 3 - rad * 0.25 + (far < 0.35 ? -r() * 8 : (r() - 0.55) * 22), turn = r() * TAU, th = rad * (0.18 + r() * 0.1);
+      const top = landform(r, rad * 1.04, th, 'hill', 24, 5);
+      const rock = landform(r, rad, rad * (1.2 + r() * 0.9), 'spire', 24, 7, top.userData.shape, true);
+      rock.rotateX(Math.PI); rock.rotateY(turn); rock.translate(x, y + 0.3, -z);
+      top.rotateY(turn); top.translate(x, y - 0.2, -z);
+      parts.push({ geometry: bakeColors(rock, rockPal, sunC, fillC, 2, false) });
+      parts.push({ geometry: bakeColors(top, topPal, sunC, fillC, 2, false) });
+      const trees = rad > 6 ? 2 + (r() * 4 | 0) : 0;
+      for (let k = 0; k < trees; k++) {
+        const a = r() * TAU, u = r() * 0.5, sz = 0.8 + r() * 0.9, h = th * Math.pow(1 - u * u, 1.7);
+        const g = new THREE.ConeGeometry(1.1 * sz, 3.2 * sz, 7).translate(x + Math.cos(a) * u * rad, y - 0.2 + h + 1.4 * sz, -z + Math.sin(a) * u * rad);
+        parts.push({ geometry: bakeColors(g.toNonIndexed(), treePal, sunC, fillC, 2, false) });
+      }
+      z += 30 + r() * 30;
+    }
+  }
+  // Hot air balloons drifting beside the course: striped envelopes, a basket and ropes, gently bobbing.
+  const BALLOON_COLS = [[0xff4f6d, 0xffffff], [0xffc21a, 0x2a6bff], [0x37c871, 0xffffff], [0x8a5cff, 0xffd84a], [0x1fb5ad, 0xff8a3d], [0xff6fb1, 0x2fd3c4]];
+  function balloonGeo(r, sunC, fillC) {
+    const pts = [];
+    for (let i = 0; i <= 14; i++) { const t = i / 14, a = t * Math.PI; pts.push(new THREE.Vector2(Math.max(0.12, Math.sin(a) * (1 - 0.35 * t * t) * 1.05), 1.15 - Math.cos(a) * 1.15 - 0.55 * t * t)); }
+    const env = new THREE.LatheGeometry(pts, 16).toNonIndexed(), cp = BALLOON_COLS[(r() * BALLOON_COLS.length) | 0], ca = lin(cp[0]), cb = lin(cp[1]);
+    const parts = [env, new THREE.BoxGeometry(0.42, 0.34, 0.42).translate(0, -1.0, 0).toNonIndexed()];
+    for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) parts.push(new THREE.CylinderGeometry(0.015, 0.015, 0.75, 3).translate(sx * 0.17, -0.48, sz * 0.17).toNonIndexed());
+    const geos = [];
+    parts.forEach((g, gi) => {
+      g.computeVertexNormals();
+      const p = g.attributes.position, n = g.attributes.normal, cols = new Float32Array(p.count * 3), c = new THREE.Color();
+      for (let i = 0; i < p.count; i += 3) {
+        let base;
+        if (gi === 0) { const ax = (p.getX(i) + p.getX(i + 1) + p.getX(i + 2)) / 3, az = (p.getZ(i) + p.getZ(i + 1) + p.getZ(i + 2)) / 3; base = (Math.floor((Math.atan2(az, ax) + Math.PI) / TAU * 16 + 0.5) % 2) ? ca : cb; }
+        else base = gi === 1 ? lin(0x8a5a30) : lin(0x4a3a2a);
+        for (let k = i; k < i + 3; k++) {
+          const ndl = Math.max(0, n.getX(k) * sunDir.x + n.getY(k) * sunDir.y + n.getZ(k) * sunDir.z), amb = 0.6 + 0.3 * n.getY(k);
+          c.setRGB(base.r * (fillC.r * amb + sunC.r * ndl), base.g * (fillC.g * amb + sunC.g * ndl), base.b * (fillC.b * amb + sunC.b * ndl));
+          c.toArray(cols, k * 3);
+        }
+      }
+      g.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+      g.deleteAttribute('uv');
+      geos.push({ geometry: g });
+    });
+    return mergeGeometries(geos);
+  }
+  // A city far below the course: blocks of towers on a grid of streets, the tallest ones standing beside the course.
+  function windowTexture() {
+    const [cv, c] = canvas2d(64, 128);
+    c.fillStyle = '#ffffff'; c.fillRect(0, 0, 64, 128);
+    for (let y = 6; y < 124; y += 10) for (let x = 5; x < 60; x += 11) { const v = 140 + ((x * 7 + y * 13) % 60); c.fillStyle = rgb(v - 40, v - 15, v + 20); c.fillRect(x, y, 7, 6); }
+    return tex(cv, true, 4, true);
+  }
+  let cityMat = null;
+  function buildCity(r, lenM, lv) {
+    if (!cityMat) cityMat = new THREE.MeshStandardMaterial({ map: windowTexture(), roughness: 0.55, metalness: 0.1 });
+    const spots = [], tints = [0xffffff, 0xe6eef6, 0xd2deea, 0xf2ece2, 0xbcd0e2, 0xdfe8ef];
+    const gy = SEA_Y + 1;
+    for (let z = 200; z > -(lenM + 700); z -= 26) {
+      const ss = clamp(-z, 0, lenM), cx = lv ? sampleLv(lv, lv.cx, ss) : 0, ty = lv ? sampleLv(lv, lv.y, ss) : 0;
+      for (let x = -520; x <= 520; x += 26) {
+        if (r() < 0.18) continue;
+        const d = Math.abs(x - cx), near = d < 60;
+        // keep a clear canyon under the course, with tall towers lining it
+        if (d < 16) continue;
+        const h = near ? lerp(30, ty - gy - 4, r()) : 12 + Math.pow(r(), 2.2) * (d < 200 ? 75 : 45);
+        const w = 9 + r() * 10, dd = 9 + r() * 10;
+        spots.push([x + (r() - 0.5) * 6, gy, z + (r() - 0.5) * 6, w, Math.max(8, h), dd, tints[(r() * tints.length) | 0]]);
+      }
+    }
+    const geo = UNIT_BOX.clone().translate(0, 0.5, 0), uv = geo.attributes.uv;
+    const mesh = new THREE.InstancedMesh(geo, cityMat, spots.length), M = new THREE.Matrix4(), col = new THREE.Color();
+    spots.forEach((p, i) => { M.compose(_p0.set(p[0], p[1], p[2]), _q0.identity(), _s0.set(p[3], p[4], p[5])); mesh.setMatrixAt(i, M); mesh.setColorAt(i, col.copy(lin(p[6]))); });
+    mesh.instanceMatrix.needsUpdate = true; if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    mesh.matrixAutoUpdate = false;
+    scenery.add(mesh);
+  }
+  function buildScenery(W, lenM, seed, lv) {
     disposeScenery();
     const r = rng(seed * 31 + 7), Lp = W.land;
     const pal = { sand: lin(Lp.sand), grass: lin(Lp.grass), rock: lin(Lp.rock), snow: lin(Lp.snow) };
     const sunC = lin(W.light.color).multiplyScalar(W.light.i * 0.85), fillC = lin(W.sea.sky).lerp(lin(W.sky.horizon), 0.5).multiplyScalar(W.sky.stars ? 1.4 : 1);
     const parts = [], lightPts = [];
     scenery = new THREE.Group();
+    if (Lp.kind === 'city') buildCity(r, lenM, lv);
     if (Lp.kind === 'floating') {
       const rockPal = { sand: pal.rock, grass: pal.rock, rock: pal.rock, snow: pal.rock }, grassPal = { sand: pal.grass, grass: pal.grass, rock: pal.grass, snow: pal.grass };
       for (let i = 0; i < 16; i++) {
@@ -1467,6 +1603,7 @@ h2 {
         if (Lp.lights) for (let k = 0; k < 7; k++) lightPts.push(side * d + (r() - 0.5) * rad * 1.1, SEA_Y + 1 + r() * rad * hMul * 0.4, z + (r() - 0.5) * rad * 1.1);
       }
     }
+    if (lv) nearIslands(lv, W, rng(seed * 53 + 11), pal, sunC, fillC, parts);
     const islands = new THREE.Mesh(mergeGeometries(parts), sceneryMat);
     islands.matrixAutoUpdate = false;
     scenery.add(islands);
@@ -1476,6 +1613,19 @@ h2 {
       const pts = new THREE.Points(lg, lightsMat);
       pts.matrixAutoUpdate = false;
       scenery.add(pts);
+    }
+    scenery.userData.balloons = [];
+    if (lv) {
+      const rb = rng(seed * 71 + 29), count = 4 + (rb() * 3 | 0);
+      for (let i = 0; i < count; i++) {
+        const ss = (i + 0.3 + rb() * 0.4) / count * lenM, side = rb() < 0.5 ? -1 : 1, sc = 2.6 + rb() * 2.4;
+        const b = new THREE.Mesh(balloonGeo(rb, sunC, fillC), sceneryMat);
+        b.scale.setScalar(sc);
+        b.position.set(sampleLv(lv, lv.cx, ss) + side * (sampleLv(lv, lv.w, ss) / 2 + 16 + rb() * 50), sampleLv(lv, lv.y, ss) + 5 + rb() * 18, -ss);
+        b.rotation.y = rb() * TAU;
+        b.userData.y0 = b.position.y; b.userData.ph = rb() * TAU;
+        scenery.add(b); scenery.userData.balloons.push(b);
+      }
     }
     scene.add(scenery);
     const mParts = [], rm = rng(seed * 17 + 3);
@@ -1825,6 +1975,9 @@ h2 {
   const INTRO = { BS: 3, RS: 4, SL: 7, BO: 8, JP: 9, BR: 11, SS: 12, HH: 13, PR: 14, RG: 16, JN: 17, HF: 18, SC: 19, B1: 21, PAIR: 22, PD: 23, CURVE: 24, BRJ: 26, BX: 27, PX: 28, TRIPLE: 29 };
   const TYPES = Object.keys(INTRO);
   const PATTERNS = { PAIR: 1, TRIPLE: 1, CURVE: 1 };
+  // Crushers: two pads side by side that take turns rising out of the deck (ages 5 and up, from level 8).
+  // Loose tiles: a zig-zag path of tiles over the drop that shake as the ball comes and fall away behind it.
+  const AGE_EXTRA = { CR: [99, 8], TP: [16, 10] };
   const RHYTHM = ['BS', 'SL', 'SS', 'HH', 'HF', 'SC', 'RS'];
   const CELEB_LISTS = {
     15: ['BS', 'RS', 'SL', 'BO', 'JP', 'BR', 'PR'],
@@ -1850,15 +2003,24 @@ h2 {
       P.obsMult = Math.min(1.25 + 0.0075 * x, 1.4);
       P.cpEvery = Math.round(4.5 * P.speed);
     }
+    // long stages, like the sky runners: 3.5 times the old length, with checkpoints along the way
+    P.len = Math.round(P.len * 3.5);
     P.celebration = n % 5 === 0 && n !== 30;
     P.grand = n === 30;
     if (n > 30) {
       if (P.celebration) { P.len = Math.round(P.len * 0.8); P.density *= 0.7; }
       if ((n - 31) % 10 < 2) { P.density *= 0.85; P.obsMult *= 0.9; }
     }
+    // more challenge at every age (most for the older choices): more obstacles on each level and a quicker obstacle beat
+    const ch = [0.15, 0.35, 0.45, 0.55][P.age];
+    P.density *= 1 + ch; P.obsMult *= 1 + 0.4 * ch;
+    // and a narrower deck for the older choices
+    P.width = +Math.max(2.6, P.width - [0, 0.2, 0.35, 0.5][P.age]).toFixed(2);
     P.intro = null;
     for (const k of TYPES) if (INTRO[k] === n) P.intro = k;
     P.allowed = (n <= 30 && CELEB_LISTS[n]) ? CELEB_LISTS[n].slice() : TYPES.filter(k => INTRO[k] <= n);
+    // obstacles only the older choices meet (never the lesson of a level)
+    for (const k in AGE_EXTRA) if (n >= AGE_EXTRA[k][P.age ? 1 : 0]) P.allowed.push(k);
     P.featured = null;
     if (n > 30) {
       const fr = rng(Math.floor((n - 31) / 10) * 97 + 5), pool = TYPES.filter(k => !PATTERNS[k]);
@@ -1868,15 +2030,18 @@ h2 {
     // P.speed is the level's base speed: obstacle clocks and spacing are tied to the distance rolled at this speed, so they
     // look and time the same at every age. P.vel is how fast the ball really rolls for the age choice.
     P.vel = ageSpeed(P.age, n, P.speed);
+    // the ball also picks up speed through the level: up to this share faster by the finish
+    P.ramp = [0.12, 0.18, 0.22, 0.25][P.age];
+    P.velMax = P.vel * (1 + P.ramp);
     P.ratio = P.vel / P.speed;
     P.corr = n <= 5 ? 3.0 : n <= 10 ? 2.5 : n <= 20 ? 2.2 : n <= 30 ? 2.0 : 1.8;
     P.decision = n <= 10 ? 3.0 : n <= 20 ? 2.2 : 1.5;
     P.steerCap = n <= 10 ? 3.0 : n <= 20 ? 4.0 : n <= 30 ? 5.0 : 5.5;
     P.wavelength = n <= 10 ? 24 : 20;
     // older children lose the safe rails a few levels sooner, and get no auto-centring or edge nudge (it would fight their steering)
-    P.railPct = railShare(n + [0, 0, 2, 4][P.age]);
-    P.autoCentre = P.age >= 3 ? 0 : P.age === 2 ? (n <= 5 ? 2 : 0) : n <= 5 ? 1 : n <= 10 ? 2 : n <= 15 ? 3 : 0;
-    P.edgeNudge = P.age <= 1 && n >= 16 && n <= 20;
+    P.railPct = railShare(n + [2, 4, 7, 10][P.age]);
+    P.autoCentre = P.age >= 2 ? 0 : P.age === 1 ? (n <= 5 ? 2 : 0) : n <= 5 ? 1 : n <= 10 ? 2 : 0;
+    P.edgeNudge = P.age === 0 && n >= 16 && n <= 20;
     P.forgive = n <= 10 ? [0.4, 0.5] : n <= 20 ? [0.3, 0.4] : n <= 30 ? [0.2, 0.3] : [0.15, 0.25];
     P.follow = n <= 10 ? 1 : n <= 20 ? 0.75 : 0.5;
     P.meter = n <= 5 ? 8 : n <= 10 ? 12 : n <= 20 ? 15 : n <= 30 ? 20 : 24;
@@ -1902,7 +2067,7 @@ h2 {
     const plain = P.allowed.filter(k => !PATTERNS[k]);
     if (!plain.length) return units;
     const rhythm = RHYTHM.filter(k => plain.indexOf(k) >= 0);
-    const weight = k => (1 + 0.15 * INTRO[k]) * (P.featured && P.featured.indexOf(k) >= 0 ? 3 : 1);
+    const weight = k => (1 + 0.15 * (INTRO[k] || AGE_EXTRA[k][1])) * (P.featured && P.featured.indexOf(k) >= 0 ? 3 : 1);
     const pickOld = (avoid, list) => {
       const pool = (list || plain).filter(k => k !== avoid && k !== P.intro);
       const use = pool.length ? pool : (list || plain);
@@ -1966,10 +2131,11 @@ h2 {
       case 'BR': { const lb = 4 + Math.floor(r() * 3); return { body: 4 + lb, dec: 2, risk: 0, lb }; }
       case 'B1': { const lb = 4 + Math.floor(r() * 3); return { body: 4 + lb, dec: 2, risk: 1, lb }; }
       case 'BX': { const lb = 3 + Math.floor(r() * 2); return { body: 4 + lb, dec: 2, risk: 1, lb }; }
-      case 'SS': case 'HH': case 'HF': case 'SC': return { body: 4, dec: 2, risk: 0 };
+      case 'SS': case 'HH': case 'HF': case 'SC': case 'CR': return { body: 4, dec: 2, risk: 0 };
       case 'PR': return { body: 6, dec: 0, risk: 0 };
       case 'PX': return { body: 6, dec: 0, risk: 1 };
       case 'PD': return { body: 10, dec: 0, risk: 1 };
+      case 'TP': { const k = 4 + Math.floor(r() * 2); return { body: 2 + 2 * k + 1, dec: 1, risk: 1, k }; }
     }
     return { body: 3, dec: 1, risk: 0 };
   }
@@ -1982,7 +2148,7 @@ h2 {
   function featCount(n, age) {
     if (n < 2) return 0;
     const k = [n < 10 ? 1 : 2, n < 6 ? 1 : n < 16 ? 2 : 3, n < 5 ? 1 : n < 12 ? 2 : n < 22 ? 3 : 4, n < 4 ? 1 : n < 9 ? 2 : n < 16 ? 3 : n < 24 ? 4 : 5][age];
-    return k + (age > 0 && n % 5 === 0 && n !== 30 ? 1 : 0);
+    return Math.round((k + (age > 0 && n % 5 === 0 && n !== 30 ? 1 : 0)) * 3);
   }
   function planFeatures(P, rf) {
     const n = P.n, age = P.age, out = [];
@@ -1995,7 +2161,7 @@ h2 {
     for (const t of types) per[t] = (per[t] || 0) + 1;
     while (types.length < want) {
       const last = types[types.length - 1];
-      const pool = open.filter(t => t !== last && (per[t] || 0) < ((t === 'IS' || t === 'RJ') && !age ? 1 : 2));
+      const pool = open.filter(t => t !== last && (per[t] || 0) < ((t === 'IS' || t === 'RJ') && !age ? 3 : 6));
       if (!pool.length) break;
       let tot = 0; for (const t of pool) tot += wt(t);
       let v = rf() * tot, pick = pool[pool.length - 1];
@@ -2011,7 +2177,7 @@ h2 {
     const n = P.n, c = AGES[P.age].c, t = clamp((n - FEAT_INTRO[type]) / Math.max(1, 30 - FEAT_INTRO[type]), 0, 1), g = first ? 0 : 1;
     const F = { type, first, c, t, risk: 1 };
     // rails: always on a piece's first level, always for ages 3-4, up to level 15 for ages 5-6
-    F.rails = first || P.age === 0 || (P.age === 1 && n <= 15);
+    F.rails = first || (P.age === 0 && n <= 15) || (P.age === 1 && n <= 8);
     switch (type) {
       case 'UP': case 'DN': {
         const up = type === 'UP';
@@ -2044,7 +2210,7 @@ h2 {
         F.k = first ? 1 : clamp(1 + Math.floor(t * lerp(1.2, 3.2, c) + rf() * 0.9), 1, Math.round(lerp(2, 4, c)));
         // at high speed the islands stay two steps long and the gaps at least two steps wide, so every hop and every
         // island lasts long enough to see the next one and steer for it
-        const quick = P.vel > 7.5;
+        const quick = P.velMax > 7.5;
         F.li = first || c < 0.5 || quick ? 2 : (rf() < 0.35 + 0.4 * c ? 1 : 2);
         F.gaps = [];
         for (let q = 0; q <= F.k; q++) F.gaps.push(first ? 1 : Math.max(quick ? 2 : 1, clamp(1 + (rf() < c * (0.4 + 0.6 * t) ? 1 : 0) + (c > 0.9 && t > 0.6 && rf() < 0.4 ? 1 : 0), 1, 3)));
@@ -2069,13 +2235,13 @@ h2 {
 
   // ---------- Level generator: seeded by the level number and the age choice, so a level is the same every time ----------
   const TEACH_RAILS = { BS: 1, RS: 1, SL: 1, SS: 1, HH: 1, HF: 1, SC: 1, BO: 1 };
-  function genLevel(n, age) {
-    const P = levelParams(n, age), r = rng(n * 7919 + 13), rf = rng(n * 104729 + P.age * 7717 + 3);
+  function genLevel(level, age) {
+    const n = stageOf(level, age | 0), P = levelParams(n, age), r = rng(n * 7919 + 13), rf = rng(n * 104729 + P.age * 7717 + 3);
     const feats = planFeatures(P, rf);
     let featBudget = 0; for (const F of feats) featBudget += F.body + 6;
     const N = P.len + featBudget, NS = N * SUB, wBase = P.width;
     const lv = {
-      n, P, N, NS, world: worldFor(n),
+      n: level, P, N, NS, world: worldFor(level),
       cx: new Float32Array(NS + 1), y: new Float32Array(NS + 1), w: new Float32Array(NS + 1), safe: new Float32Array(NS + 1),
       bank: new Float32Array(NS + 1), fol: new Float32Array(NS + 1).fill(P.follow), spd: new Float32Array(NS + 1).fill(1),
       gap: new Uint8Array(N), kind: new Uint8Array(N), bridge: new Uint8Array(N), railL: new Uint8Array(N), railR: new Uint8Array(N),
@@ -2219,16 +2385,45 @@ h2 {
           busyR(s0, s0 + 3); rankR(s0, s0 + 3); straightR(s0 - 3, s0 + 6);
           break;
         }
+        case 'CR': {
+          // two crushers side by side take turns: one sinks flush into the deck while the other stands up. The star line
+          // runs over the one that is down when the ball gets there (the clock follows the ball, so that is always so).
+          const side = hint || rs, need = 2 * P.corr + 0.28;
+          if (need > wBase) widen(s0 - 1, s0 + 4, need - wBase);
+          const wl = Math.max(wBase, need), bw = wl / 2 - 0.2, m = n <= 9 ? Math.min(mult, 0.75) : mult;
+          // the open one has been down for a good while before the ball gets there, so the way through is plain to see
+          const rest = 1.8 / m, d = 0.4 / m, period = 2 * (rest + d), safe = side * wl / 4, at = rest * 0.68;
+          for (const sd of [1, -1]) ob({ type: 'crusher', s: (s0 + 2.5) * L, lat: sd * safe, hw: bw / 2, hd: 0.6, h: 1.1, hc: 0, rest, d, period, phase: (at + (sd > 0 ? 0 : rest + d)) / period, safe });
+          key(s0 + 0.25, s0 + 4, safe); starLine(s0, 5, 1.1, safe); safeOut = safe;
+          busyR(s0, s0 + 3); rankR(s0, s0 + 3); lane(s0 - 3, s0 + 6);
+          break;
+        }
         case 'HH': case 'HF': {
-          const full = type === 'HF', side = hint ? (full ? hint : -hint) : rs, hl = 0.45, need = full ? wBase : 5.25;
+          const full = type === 'HF', side = hint ? (full ? hint : -hint) : rs, wball = r() < 0.5, hl = wball ? 0.62 : 0.45, need = full ? wBase : 5.25;
           if (need > wBase) widen(s0 - 1, s0 + 4, need - wBase);
           const wl = Math.max(wBase, need), lp = 3.3;
           let c, A, safe;
           if (full) { c = 0; A = wl / 2 - hl - 0.06; safe = side * (wl / 2 - 0.8); }
           else { const lo = hl + 0.08, hi = wl / 2 - hl - 0.06; c = side * (lo + hi) / 2; A = (hi - lo) / 2; safe = -side * wl / 4; }
-          ob({ type: 'hammer', s: (s0 + 2.5) * L, lat: c, lp, thm: Math.asin(Math.min(0.95, A / lp)), period: Math.max(3.2 * 1.2, 4.5 / mult), phase: r(), hl, rad: 0.42, safe, span: wl, tune: full });
+          ob({ type: 'hammer', s: (s0 + 2.5) * L, lat: c, lp, thm: Math.asin(Math.min(0.95, A / lp)), period: Math.max(3.2 * 1.2, 4.5 / mult), phase: r(), hl, rad: wball ? 0.62 : 0.42, wball, safe, span: wl, tune: full });
           key(s0 + 0.25, s0 + 4, safe); starLine(s0, 5, 1.1, safe); safeOut = safe;
           busyR(s0, s0 + 3); rankR(s0, s0 + 3); straightR(s0 - 3, s0 + 6);
+          break;
+        }
+        case 'TP': {
+          // loose tiles over the drop, two steps each, stepping out to one side and back; the star line runs down them
+          const k = f.k, tw = +Math.max(1.7, Math.min(2.4, wBase - 0.7)).toFixed(2), a = s0 + 2, side = hint || rs, amp = Math.min(1.3, 0.55 * tw);
+          forceR(s0 - 3, s0 + 1, 1);
+          for (let q = 0; q < k; q++) {
+            const st = a + 2 * q, c = +(side * amp * Math.sin(Math.PI * q / (k - 1))).toFixed(2);
+            for (let j = st; j < st + 2; j++) { lv.gap[j] = 1; lv.kind[j] = 6; }
+            lv.platforms.push({ s0: st * L, s1: (st + 2) * L, step0: st, w: tw, A: 0, c, d: 1, rest: 1, period: 4, phase: 0, railed: false, off: c, dOff: 0, slow: 1, len: 2, crumble: true, fallT: 0 });
+            key(st + 1, st + 1, c);
+          }
+          const exit = a + 2 * k;
+          forceR(exit, exit + 2, 1);
+          straightR(s0 - 3, exit + 4); busyR(s0 - 1, exit + 2); rankR(s0, exit + 2); noHopR(s0 - 2, exit);
+          key(s0 - 2, a - 0.5, 0); key(exit + 0.5, exit + 3, 0); starLine(exit + 0.5, 3, 1, 0);
           break;
         }
         case 'PR': case 'PX': case 'PD': {
@@ -2616,7 +2811,7 @@ h2 {
       const unlocked = t => n >= P.unlock[t];
       const nearIntro = s => (lv.introStep >= 0 && s >= lv.introStep - 6 && s <= lv.introEnd + 1) || (lv.fIntroStep >= 0 && s >= lv.fIntroStep - 6 && s <= lv.fIntroEnd + 1);
       const helpFor = t => {
-        if (t === 'BR' || t === 'B1' || t === 'BX' || t === 'PR' || t === 'PX' || t === 'PD' || t === 'TN') return unlocked('shield') ? 'shield' : 'magnet';
+        if (t === 'BR' || t === 'B1' || t === 'BX' || t === 'TP' || t === 'PR' || t === 'PX' || t === 'PD' || t === 'TN') return unlocked('shield') ? 'shield' : 'magnet';
         if (t === 'BO' || t === 'UP' || t === 'DN') return 'magnet';
         if (t === 'IS' || t === 'RJ') return unlocked('jump') && r() < 0.5 ? 'jump' : unlocked('shield') ? 'shield' : 'magnet';
         const air = r() < 0.5 ? 'fly' : 'jump';
@@ -2670,6 +2865,17 @@ h2 {
       }
       lv.pickups.sort((a, b) => a.s - b.s);
     }
+    // Ring gates the course runs through, on calm stretches only (never over a gap, jump, bridge, piece or obstacle).
+    lv.rings = [];
+    {
+      let last = -99;
+      for (let i = 12; i < finish - 6; i++) {
+        if (i - last < 12) continue;
+        let ok = true;
+        for (let k = i - 3; k <= i + 3 && ok; k++) if (busy[k] || lv.gap[k] || lv.bridge[k] || lv.kind[k] || lv.feat[k]) ok = false;
+        if (ok) { lv.rings.push(i); last = i; }
+      }
+    }
     for (const o of lv.obstacles) if (o.tune) tunePhase(o, P);
     return lv;
   }
@@ -2708,6 +2914,7 @@ h2 {
     cushion: new THREE.MeshStandardMaterial({ map: cush.map, roughnessMap: cush.roughnessMap, roughness: 1, metalness: 0 }),
     capPaint: new THREE.MeshStandardMaterial({ color: lin(0x2a3b8f), roughness: 0.35, metalness: 0.1 }),
     pylon: new THREE.MeshStandardMaterial({ color: lin(0x1d2a6b), roughness: 0.32, metalness: 0.15 }),
+    ring: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.3, metalness: 0.05 }),
     banner: new THREE.MeshBasicMaterial({ map: bannerTexture(), toneMapped: false }),
     lens: new THREE.MeshBasicMaterial({ color: 0xffffff }),
     glass: new THREE.MeshPhysicalMaterial({ color: lin(0xbfe9f5), roughness: 0.12, metalness: 0, transmission: 0.45, transparent: true, depthWrite: false, envMapIntensity: 1.8 }),
@@ -2940,7 +3147,7 @@ h2 {
   }
   function buildRails(lv, group, disp) {
     buildLv = lv;
-    const high = lv.n <= 5, tubes = high ? [[0.62, 0.085], [0.32, 0.06]] : [[0.45, 0.075]];
+    const high = lv.P.n <= 5, tubes = high ? [[0.62, 0.085], [0.32, 0.06]] : [[0.45, 0.075]];
     const bT = GB(), posts = [], caps = [];
     for (const o of [-1, 1]) {
       const arr = o < 0 ? lv.railL : lv.railR;
@@ -3018,6 +3225,7 @@ h2 {
   const SPOST_GEO = new THREE.CylinderGeometry(0.17, 0.21, 1, 16).translate(0, 0.5, 0);
   const HUB_GEO = new THREE.CylinderGeometry(0.25, 0.25, 0.14, 18);
   const PIVOT_H = 4.1;
+  const WBALL_GEO = new THREE.SphereGeometry(0.62, 28, 18);
 
   const ease = t => 0.6 * t + 0.4 * smooth(t);
   function cyc(u, rest, d) {
@@ -3030,10 +3238,11 @@ h2 {
   function poseAt(o, tau) {
     if (o.type === 'slider') o.cl = lerp(o.outer, o.inner, cyc(frac(o.phase + tau / o.period) * o.period, o.rest, o.d));
     else if (o.type === 'spinner') o.ang = o.phase * TAU + o.dir * TAU * tau / o.period;
+    else if (o.type === 'crusher') { o.hc = o.h * cyc(frac(o.phase + tau / o.period) * o.period, o.rest, o.d); o.cl = o.lat; }
     else if (o.type === 'hammer') { o.th = o.thm * Math.sin(TAU * (o.phase + tau / o.period)); o.cl = o.lat + o.lp * Math.sin(o.th); o.hy = o.y0 + PIVOT_H - o.lp * Math.cos(o.th); }
     else o.cl = o.lat;
   }
-  function platOffset(p, tau) { return lerp(-p.A, p.A, cyc(frac(p.phase + tau / p.period) * p.period, p.rest, p.d)); }
+  function platOffset(p, tau) { return (p.c || 0) + lerp(-p.A, p.A, cyc(frac(p.phase + tau / p.period) * p.period, p.rest, p.d)); }
   // Distance from a ball at (lat, ds) to the obstacle surface, minus the ball radius (local plane: x = lat, z = -ds).
   function obsClear(o, lat, ds) {
     const bz = -ds;
@@ -3065,8 +3274,9 @@ h2 {
     for (const o of obs) {
       o.cx0 = sampleLv(lv, lv.cx, o.s); o.y0 = sampleLv(lv, lv.y, o.s); o.z = -o.s; o.cl = o.lat; o.ang = 0; o.th = 0;
       poseAt(o, 0);
-      if (o.type === 'block' || o.type === 'slider') {
+      if (o.type === 'block' || o.type === 'slider' || o.type === 'crusher') {
         o.ii = cushions.length; cushions.push(o);
+        if (o.type === 'crusher') box(metal, o.cx0 + o.lat, o.y0 + 0.008, o.z, o.hw * 2 + 0.2, 0.025, o.hd * 2 + 0.2);
         if (o.type === 'slider') {
           const a = Math.min(o.outer, o.inner) - o.hw - 0.1, b = Math.max(o.outer, o.inner) + o.hw + 0.1;
           box(metal, o.cx0 + (a + b) / 2, o.y0 + 0.008, o.z, b - a, 0.025, o.hd * 2 + 0.2);
@@ -3097,23 +3307,24 @@ h2 {
     const pole = new THREE.InstancedMesh(POLE_GEO, MAT.metalI, Math.max(1, hammers.length));
     const head = new THREE.InstancedMesh(DRUM_GEO, MAT.cushion, Math.max(1, hammers.length));
     const caps = new THREE.InstancedMesh(DRUMCAP_GEO, MAT.capPaint, Math.max(1, hammers.length * 2));
-    pole.count = head.count = hammers.length; caps.count = hammers.length * 2;
-    for (const m of [pole, head, caps]) { m.castShadow = true; m.receiveShadow = true; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); }
-    group.add(cm, am, spm, hub, pole, head, caps);
-    disp.push(cm, am, spm, hub, pole, head, caps);
-    lv.props = { cushions, spinners, hammers, cm, am, pole, head, caps, M };
+    const wb = new THREE.InstancedMesh(WBALL_GEO, MAT.cushion, Math.max(1, hammers.length));
+    pole.count = head.count = wb.count = hammers.length; caps.count = hammers.length * 2;
+    for (const m of [pole, head, caps, wb]) { m.castShadow = true; m.receiveShadow = true; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); }
+    group.add(cm, am, spm, hub, pole, head, caps, wb);
+    disp.push(cm, am, spm, hub, pole, head, caps, wb);
+    lv.props = { cushions, spinners, hammers, cm, am, pole, head, caps, wb, M };
     for (const o of obs) o.pr = lv.props;
     if (metal.length) { const g = mergeGeometries(metal), m = new THREE.Mesh(g, MAT.trim); m.castShadow = true; m.receiveShadow = true; m.matrixAutoUpdate = false; group.add(m); disp.push(g); }
     if (paint.length) { const g = mergeGeometries(paint), m = new THREE.Mesh(g, MAT.capPaint); m.castShadow = true; m.receiveShadow = true; m.matrixAutoUpdate = false; group.add(m); disp.push(g); }
     for (const o of obs) writeObstacle(o, true);
-    cm.instanceMatrix.needsUpdate = am.instanceMatrix.needsUpdate = pole.instanceMatrix.needsUpdate = head.instanceMatrix.needsUpdate = caps.instanceMatrix.needsUpdate = true;
+    cm.instanceMatrix.needsUpdate = am.instanceMatrix.needsUpdate = pole.instanceMatrix.needsUpdate = head.instanceMatrix.needsUpdate = caps.instanceMatrix.needsUpdate = wb.instanceMatrix.needsUpdate = true;
 
     // Moving platforms: a wooden ride with a painted frame and rails when railed. Each width gets its own meshes,
     // so what is drawn always matches the platform the ball rides (railed and open platforms can differ in width).
     if (lv.platforms.length) {
-      const deck = deckSet(W.deck), len = 3 * L - 0.12, sets = {};
-      const setFor = w => {
-        const key = w.toFixed(2);
+      const deck = deckSet(W.deck), sets = {};
+      const setFor = (w, steps) => {
+        const len = steps * L - 0.12, key = w.toFixed(2) + '_' + steps;
         if (sets[key]) return sets[key];
         const hw = w / 2;
         const top = new THREE.PlaneGeometry(w - 0.16, len).rotateX(-Math.PI / 2).translate(0, 0, -len / 2 - 0.06);
@@ -3135,7 +3346,7 @@ h2 {
       };
       const beamParts = [];
       for (const p of lv.platforms) {
-        const gs = setFor(p.w), g = new THREE.Group();
+        const gs = setFor(p.w, p.len || 3), g = new THREE.Group();
         const t = new THREE.Mesh(gs.top, deck.mat); t.receiveShadow = true;
         const f = new THREE.Mesh(gs.frame, MAT.capPaint); f.castShadow = true; f.receiveShadow = true;
         g.add(t, f);
@@ -3143,9 +3354,30 @@ h2 {
         p.cx0 = sampleLv(lv, lv.cx, p.s0);
         g.position.set(p.cx0, p.y, -p.s0);
         group.add(g); p.mesh = g;
-        for (const zz of [p.s0 + 0.4, p.s1 - 0.4]) { const MM = new THREE.Matrix4(); MM.compose(_p0.set(p.cx0, p.y - 0.62, -zz), _q0.identity(), _s0.set(p.w + 2 * p.A + 0.6, 0.12, 0.16)); beamParts.push({ geometry: UNIT_BOX, matrix: MM }); }
+        if (!p.crumble) for (const zz of [p.s0 + 0.4, p.s1 - 0.4]) { const MM = new THREE.Matrix4(); MM.compose(_p0.set(p.cx0, p.y - 0.62, -zz), _q0.identity(), _s0.set(p.w + 2 * p.A + 0.6, 0.12, 0.16)); beamParts.push({ geometry: UNIT_BOX, matrix: MM }); }
       }
-      const bg = mergeGeometries(beamParts), bm = new THREE.Mesh(bg, MAT.trim); bm.receiveShadow = true; bm.matrixAutoUpdate = false; group.add(bm); disp.push(bg);
+      if (beamParts.length) { const bg = mergeGeometries(beamParts), bm = new THREE.Mesh(bg, MAT.trim); bm.receiveShadow = true; bm.matrixAutoUpdate = false; group.add(bm); disp.push(bg); }
+    }
+
+    // Ring gates: red and white hoops standing round the deck, their lower half passing under it.
+    if (lv.rings.length) {
+      const parts = [], red = lin(0xe8343a), white = lin(0xf4f6f8);
+      for (const i of lv.rings) {
+        const s = (i + 0.5) * L, rr = sampleLv(lv, lv.w, s) / 2 + 1.5;
+        const g = new THREE.TorusGeometry(rr, 0.3, 10, 56).toNonIndexed();
+        g.translate(sampleLv(lv, lv.cx, s), sampleLv(lv, lv.y, s) + 0.5, -s);
+        const p = g.attributes.position, cols = new Float32Array(p.count * 3), cy = sampleLv(lv, lv.y, s) + 0.5, cx = sampleLv(lv, lv.cx, s);
+        for (let v = 0; v < p.count; v += 3) {
+          const a = Math.atan2((p.getY(v) + p.getY(v + 1) + p.getY(v + 2)) / 3 - cy, (p.getX(v) + p.getX(v + 1) + p.getX(v + 2)) / 3 - cx);
+          const c = Math.floor((a + Math.PI) / TAU * 14) % 2 ? red : white;
+          for (let k = v; k < v + 3; k++) c.toArray(cols, k * 3);
+        }
+        g.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+        parts.push({ geometry: g });
+      }
+      const rg = mergeGeometries(parts), rm = new THREE.Mesh(rg, MAT.ring);
+      rm.castShadow = true; rm.receiveShadow = true; rm.matrixAutoUpdate = false;
+      group.add(rm); disp.push(rg);
     }
 
     // Checkpoint beacons: white until passed, then green.
@@ -3184,6 +3416,11 @@ h2 {
       if (o.type === 'block' && !force) return;
       M.compose(_p0.set(o.cx0 + o.cl, o.y0 + o.h / 2, o.z), _q0.identity(), _s0.set(o.hw * 2, o.h, o.hd * 2));
       pr.cm.setMatrixAt(o.ii, M); pr.cm.instanceMatrix.needsUpdate = true;
+    } else if (o.type === 'crusher') {
+      // down, its top sits flush with the deck; the body never reaches below the deck
+      const top = o.y0 + 0.03 + o.hc, body = Math.min(o.h, o.hc + BODY_T - 0.08);
+      M.compose(_p0.set(o.cx0 + o.lat, top - body / 2, o.z), _q0.identity(), _s0.set(o.hw * 2, body, o.hd * 2));
+      pr.cm.setMatrixAt(o.ii, M); pr.cm.instanceMatrix.needsUpdate = true;
     } else if (o.type === 'spinner') {
       const off = o.single ? o.arm / 2 : 0;
       M.compose(_p0.set(o.cx0 + o.lat + Math.cos(o.ang) * off, o.y0 + 0.5, o.z + Math.sin(o.ang) * off), _q0.setFromAxisAngle(_upV, -o.ang), _s0.set(o.single ? o.arm + 0.3 : o.arm * 2, 0.32, 0.32));
@@ -3193,9 +3430,15 @@ h2 {
       _q0.setFromEuler(_e0.set(0, 0, o.th));
       M.compose(_p0.set(px, py, o.z), _q0, _s0.set(1, o.lp - o.rad + 0.05, 1)); pr.pole.setMatrixAt(o.ii, M);
       const hx = px + o.lp * sn, hy = py - o.lp * cs;
-      M.compose(_p0.set(hx, hy, o.z), _q0, _s0.set(1, 1, 1)); pr.head.setMatrixAt(o.ii, M);
-      for (let k = 0; k < 2; k++) { const sd = k ? 1 : -1; M.compose(_p0.set(hx + sd * 0.48 * cs, hy + sd * 0.48 * sn, o.z), _q0, _s0.set(1, 1, 1)); pr.caps.setMatrixAt(o.ii * 2 + k, M); }
-      pr.pole.instanceMatrix.needsUpdate = pr.head.instanceMatrix.needsUpdate = pr.caps.instanceMatrix.needsUpdate = true;
+      if (o.wball) {
+        pr.head.setMatrixAt(o.ii, HIDE); pr.caps.setMatrixAt(o.ii * 2, HIDE); pr.caps.setMatrixAt(o.ii * 2 + 1, HIDE);
+        M.compose(_p0.set(hx, hy, o.z), _q0, _s0.set(1, 1, 1)); pr.wb.setMatrixAt(o.ii, M);
+      } else {
+        M.compose(_p0.set(hx, hy, o.z), _q0, _s0.set(1, 1, 1)); pr.head.setMatrixAt(o.ii, M);
+        for (let k = 0; k < 2; k++) { const sd = k ? 1 : -1; M.compose(_p0.set(hx + sd * 0.48 * cs, hy + sd * 0.48 * sn, o.z), _q0, _s0.set(1, 1, 1)); pr.caps.setMatrixAt(o.ii * 2 + k, M); }
+        pr.wb.setMatrixAt(o.ii, HIDE);
+      }
+      pr.pole.instanceMatrix.needsUpdate = pr.head.instanceMatrix.needsUpdate = pr.caps.instanceMatrix.needsUpdate = pr.wb.instanceMatrix.needsUpdate = true;
       o.hy = hy;
     }
   }
@@ -3348,8 +3591,8 @@ h2 {
       applyWorldMaterials(W);
     }
     const lenM = lv.N * L;
-    buildScenery(W, lenM, lv.n);
-    placePuffs(lenM, lv.n * 13 + 5);
+    buildScenery(W, lenM, lv.n, lv);
+    placePuffs(lenM, lv.n * 13 + 5, lv);
     sea.position.set(0, SEA_Y, -lenM / 2); sea.updateMatrix();
     layerA.position.set(0, -32, -lenM / 2); layerB.position.set(0, -48, -lenM / 2);
   }
@@ -3397,8 +3640,10 @@ h2 {
   };
   let state = 'menu', prevState = 'playing', stateTimer = 0, gt = 0, levelStars = 0, lastCp = 0, lastCpIdx = 0, rollIn = 1;
   let hintTimer = 0, steerTotal = 0, fingerDown = false, idleT = 0, assistBoost = false, helpedSections = 0, cleanSection = true, lastBumpT = 0;
-  const input = { keyL: false, keyR: false };
-  const levelSpeed = () => lvl.P.vel;
+  const input = { keyL: false, keyR: false, keyU: false, keyD: false };
+  // throttle: -1 (slide down, slowest) to 1 (slide up, fastest); speedF follows it smoothly
+  let throttle = 0, speedF = 1;
+  const levelSpeed = () => lvl.P.vel * (1 + lvl.P.ramp * clamp((ball.s - START_S) / (lvl.finish * L), 0, 1));
   const bankAt = s => lvl.banked ? arrAt(lvl.bank, s) : 0;
   function autoCentreTime() {
     const P = lvl.P;
@@ -3415,12 +3660,12 @@ h2 {
     if (!assistBoost) return P.forgive;
     return FORGIVE_UP[P.n <= 20 ? 0 : P.n <= 30 ? 1 : 2];
   }
-  function railLimit() { return (lvl.n <= 5 ? 0.085 : 0.075) + 0.12 + R; }
+  function railLimit() { return (lvl.P.n <= 5 ? 0.085 : 0.075) + 0.12 + R; }
 
   function resetBallAt(s) {
     const b = ball;
     b.s = s; b.lat = 0; b.tgt = 0; b.latV = 0; b.vy = 0; b.fwd = 0; b.mode = 'roll';
-    b.boostT = 0; b.boostF = 1; b.bumpT = 0; b.holdT = 0; b.ghostT = 0; b.tempRail = 0; b.teeter = 0; b.hopCool = 0; b.squash = 0; b.plat = null; b.slopeF = 1;
+    b.boostT = 0; b.boostF = 1; b.bumpT = 0; b.holdT = 0; b.ghostT = 0; b.tempRail = 0; b.teeter = 0; b.hopCool = 0; b.squash = 0; b.plat = null; b.slopeF = 1; speedF = 1;
     b.y = yAt(s) + R; b.z = -s; b.x = cxAt(s);
     vt = s / lvl.P.speed;
     for (const p of lvl.platforms) { p.off = platOffset(p, (vt - p.s0 / lvl.P.speed) * p.slow); p.offLast = p.off; }
@@ -3610,7 +3855,8 @@ h2 {
         nx = ex / d; nz = ez / d; pen = m - d; hz = o.arm;
       } else {
         let hx;
-        if (o.type === 'hammer') { if (by + R < o.hy - 0.42 || by - R > o.hy + 0.42) continue; hx = o.hl; hz = o.rad; }
+        if (o.type === 'hammer') { if (by + R < o.hy - o.rad || by - R > o.hy + o.rad) continue; hx = o.hl; hz = o.rad; }
+        else if (o.type === 'crusher') { if (o.hc < 0.3 || by - R > o.y0 + o.hc - 0.1) continue; hx = o.hw; hz = o.hd; }
         else { if (by - R > o.y0 + o.h) continue; hx = o.hw; hz = o.hd; }
         const px = clamp(dx, -hx, hx), pz = clamp(dz, -hz, hz), ex = dx - px, ez = dz - pz, d = Math.hypot(ex, ez);
         if (d >= R) continue;
@@ -3723,7 +3969,7 @@ h2 {
     const b = ball, lv = lvl, bx = cxAt(b.s) + b.lat, by = b.y, bz = -b.s;
     const magR = bonus.type === 'magnet' ? lv.P.magnetR : 0, mr2 = magR * magR;
     const column = b.mode === 'fly' || (b.mode === 'arc' && b.arc.kind === 'sj');
-    const reach = lv.n <= 5 || lv.P.age === 0 ? 1.1 : 0.85;   // a slightly smaller reach from level 6 for ages 5 and up
+    const reach = lv.P.n <= 5 || lv.P.age === 0 ? 1.1 : 0.85;   // a slightly smaller reach from level 6 for ages 5 and up
     for (let i = 0; i < lv.stars.length; i++) {
       const st = lv.stars[i];
       if (!st.alive) continue;
@@ -3791,7 +4037,7 @@ h2 {
       for (const o of lv.obstacles) if (o.sec === sec) o.slow = 0.8;
       for (const p of lv.platforms) if (p.sec === sec) p.slow = 0.8;
     }
-    lv.pendingHelp = f >= th[2] ? (lv.n >= lv.P.unlock.fly ? 'fly' : 'shield') : f >= th[1] ? 'shield' : null;
+    lv.pendingHelp = f >= th[2] ? (lv.P.n >= lv.P.unlock.fly ? 'fly' : 'shield') : f >= th[1] ? 'shield' : null;
   }
   function respawn() {
     const lv = lvl, cp = lv.cps[lastCpIdx], s = cp === 0 ? START_S : (cp + 0.5) * L;
@@ -3839,7 +4085,9 @@ h2 {
       b.slopeF += (m - b.slopeF) * Math.min(1, dt * (m < b.slopeF ? (m < 0.995 ? 1.8 : 0.8) : 1.2));
     } else b.slopeF += (1 - b.slopeF) * Math.min(1, dt * 0.8);
     let target = 0;
-    if (state === 'playing') target = levelSpeed() * b.slopeF * b.boostF * (b.bumpT > 0 ? lerp(1, 0.45, b.bumpT / 0.5) : 1) * rollIn;
+    const thr = input.keyU ? 1 : input.keyD ? -1 : throttle;
+    speedF += ((thr >= 0 ? 1 + 0.35 * thr : 1 + 0.4 * thr) - speedF) * Math.min(1, dt * 3);
+    if (state === 'playing') target = levelSpeed() * speedF * b.slopeF * b.boostF * (b.bumpT > 0 ? lerp(1, 0.45, b.bumpT / 0.5) : 1) * rollIn;
     else if (state === 'finishing') target = levelSpeed() * 0.55 * Math.max(0, stateTimer / 1.8);
     if (b.boostT > 0) { b.boostT -= dt; b.boostF = Math.min(1.28, b.boostF + dt / 0.4 * 0.28); }
     else b.boostF = Math.max(1, b.boostF - dt * 0.28);
@@ -3895,7 +4143,7 @@ h2 {
   // ---------- Helper bonuses: Super Jump, Fly, Star Magnet, Bubble Shield ----------
   const bonus = { type: null, t: 0, dur: 1, queue: null, queueSrc: null, last: null, skip: 0, rescue: false, ending: false, tickAt: 2, ringShown: -1 };
   const shieldActive = () => bonus.type === 'shield';
-  const unlockedB = t => !!lvl && lvl.n >= lvl.P.unlock[t];
+  const unlockedB = t => !!lvl && lvl.P.n >= lvl.P.unlock[t];
   function nearIntro(s) {
     const lv = lvl, st = s / L;
     return (lv.introStep >= 0 && st >= lv.introStep - 6 && st <= lv.introEnd + 1) || (lv.fIntroStep >= 0 && st >= lv.fIntroStep - 6 && st <= lv.fIntroEnd + 1);
@@ -4405,8 +4653,9 @@ h2 {
       const lift = b.mode === 'arc' ? (b.arc.kind === 'sj' ? 0.5 : 1.3) : b.mode === 'fly' ? 1.4 : b.mode === 'rescue' ? 1 : 0;
       // on hills the view tilts with the track a few metres ahead, so a climb looks like a climb and a drop like a drop
       const sA = b.s + 6, ahead = b.mode === 'roll' && !lvl.gap[stepAt(sA)] ? clamp(yAt(sA) - yAt(b.s), -2.5, 2.5) * 0.5 : 0;
-      tPos.set(b.x * 0.72 + cxB * 0.28, camY + 3.4 + lift, b.z + 6.6 + lift * 0.4);
-      tLook.set(b.x * 0.78 + cxA * 0.22, camY - 0.35 - lift * 0.25 + ahead, b.z - 4.8);
+      // low and close behind the ball, looking far down the course (the ball sits big in the lower half of the picture)
+      tPos.set(b.x * 0.8 + cxB * 0.2, camY + 2.3 + lift, b.z + 4.9 + lift * 0.4);
+      tLook.set(b.x * 0.8 + cxA * 0.2, camY + 0.15 - lift * 0.25 + ahead, b.z - 9);
       if (b.mode === 'arc' && (b.arc.kind === 'pad' || b.arc.kind === 'ramp')) { tLook.z = lerp(tLook.z, -b.arc.s1, 0.35); tLook.y -= 0.4; }
     }
     if (viewOffsetOn && state !== 'menu' && state !== 'shop') applyMenuView(false);
@@ -4592,26 +4841,29 @@ h2 {
   // ---------- Input: slide to steer, arrow keys or A/D ----------
   // Only one finger steers: a second finger or a resting palm can tap to go but never moves the ball,
   // and lifting it does not stop the steering finger.
-  let dragging = false, lastPX = 0, dragAcc = 0, dragActive = false, activeId = null;
+  let dragging = false, lastPX = 0, dragAcc = 0, dragActive = false, activeId = null, startPY = 0;
   const pxToM = () => AGES[ageOf()].sens / clamp(viewW, 320, 1200);
   canvas.addEventListener('pointerdown', e => {
     audio();
     if (activeId !== null && !e.isPrimary) { if (state === 'ready') go(); return; }
     activeId = e.pointerId;
-    dragging = true; fingerDown = true; lastPX = e.clientX; dragAcc = 0; dragActive = false;
+    dragging = true; fingerDown = true; lastPX = e.clientX; dragAcc = 0; dragActive = false; startPY = e.clientY;
     try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
     if (state === 'ready') go();
   });
   canvas.addEventListener('pointermove', e => {
     if (!dragging || e.pointerId !== activeId) return;
     let dx = e.clientX - lastPX; lastPX = e.clientX;
+    // up and down sets the speed: past a small dead zone, a slide of about a sixth of the screen is full speed or slowest
+    const dy = startPY - e.clientY, dzY = 24;
+    throttle = Math.abs(dy) < dzY ? 0 : clamp((dy - Math.sign(dy) * dzY) / Math.max(90, viewH * 0.16), -1, 1);
     // a small dead zone tells a tap from a slide; the movement past it still steers, so the ball never lags the finger
     if (!dragActive) { dragAcc += dx; const dz = AGES[ageOf()].dead; if (Math.abs(dragAcc) < dz) return; dragActive = true; dx = dragAcc - Math.sign(dragAcc) * dz; }
     if (state === 'playing') { ball.tgt += dx * pxToM(); steerTotal += Math.abs(dx); }
   });
   const endDrag = e => {
     if (e && e.pointerId != null && e.pointerId !== activeId) return;
-    activeId = null; dragging = false; fingerDown = false;
+    activeId = null; dragging = false; fingerDown = false; throttle = 0;
   };
   canvas.addEventListener('pointerup', e => { audio(); endDrag(e); });   // a finger lift counts as a tap for unlocking sound
   canvas.addEventListener('pointercancel', endDrag);
@@ -4621,6 +4873,8 @@ h2 {
     const k = e.key, onButton = document.activeElement && document.activeElement.tagName === 'BUTTON';
     if (k === 'ArrowLeft' || k === 'a' || k === 'A') { input.keyL = true; steerTotal += 20; if (state === 'ready') go(); }
     else if (k === 'ArrowRight' || k === 'd' || k === 'D') { input.keyR = true; steerTotal += 20; if (state === 'ready') go(); }
+    else if (k === 'ArrowUp' || k === 'w' || k === 'W') { input.keyU = true; if (state === 'ready') go(); }
+    else if (k === 'ArrowDown' || k === 's' || k === 'S') { input.keyD = true; if (state === 'ready') go(); }
     else if (k === 'Escape' || k === 'p' || k === 'P') { if (state === 'paused') resume(); else pause(); }
     else if (k === 'Enter' || k === ' ') {
       if (onButton && state !== 'playing' && state !== 'ready') return;
@@ -4636,8 +4890,11 @@ h2 {
   window.addEventListener('keyup', e => {
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') input.keyL = false;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') input.keyR = false;
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') input.keyU = false;
+    if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') input.keyD = false;
   });
-  window.addEventListener('blur', () => { input.keyL = input.keyR = false; endDrag(); });
+  // Leaving the window (another app or window in front) pauses a level that is under way.
+  window.addEventListener('blur', () => { input.keyL = input.keyR = input.keyU = input.keyD = false; endDrag(); if (!headless) pause(); });
 
   // The menu is on screen before start-up has finished (it waits a moment for the web font): a tap there finishes it first.
   $('playBtn').addEventListener('click', startPlay);
@@ -4700,6 +4957,17 @@ h2 {
     updateCamera(dt, false);
     sky.position.copy(camera.position);
     if (mountains) mountains.position.set(camera.position.x, 0, camera.position.z);
+    if (lvl) for (const p of lvl.platforms) {
+      if (!p.crumble || !p.mesh) continue;
+      if (ball.s > p.s1 + 0.3 && (state === 'playing' || state === 'finishing' || state === 'falling')) p.fallT += dt;
+      else if (ball.s < p.s0 - 0.5) p.fallT = 0;
+      const near = p.s0 - ball.s, shake = !p.fallT && near < 6 && ball.s < p.s1 ? Math.sin(gt * 55 + p.s0) * 0.035 : 0;
+      p.mesh.position.y = p.y - 0.5 * G * p.fallT * p.fallT + shake;
+      p.mesh.rotation.z = p.fallT * 0.9 * (p.c >= 0 ? 1 : -1);
+      p.mesh.rotation.x = p.fallT * 0.4;
+      p.mesh.visible = p.fallT < 2.5;
+    }
+    if (scenery) for (const b of scenery.userData.balloons) { b.position.y = b.userData.y0 + Math.sin(gt * 0.45 + b.userData.ph) * 0.9; b.rotation.y += dt * 0.05; }
     _focus.set(ball.x, ball.y, ball.z - SH * 0.5); updateSun(_focus);
     seaMat.uniforms.uTime.value = gt % 1000;
     cloudTexA.offset.x += dt * 0.002; cloudTexB.offset.x += dt * 0.0012;
@@ -4714,6 +4982,9 @@ h2 {
     if (document.hidden) { pause(); saveNow(); stopLoop(); if (roll && actx) roll.g.gain.setTargetAtTime(0, actx.currentTime, 0.05); }
     else startLoop();
   });
+  // The iPhone app calls this when it stops being the active app (Notification Centre, Control Centre, Siri,
+  // a call). The page stays visible then, so visibilitychange does not fire and the level would roll on.
+  window.selenaPause = () => { if (!headless) pause(); };
   // Only unsaved progress is written on the way out, so closing an older tab never rolls back what a newer tab saved.
   window.addEventListener('pagehide', () => { saveNow(); });
   // Another tab saved: take in its progress (never lowering anything) while this tab is not in the middle of a level.
@@ -4885,8 +5156,8 @@ h2 {
     }
     // The terrain pieces planned for a level and age, with their sizes (the same plan genLevel uses).
     function pieces(n, age) {
-      const P = levelParams(n, age), keys = ['type', 'first', 'rails', 'len', 'h', 'd', 'parts', 'k', 'li', 'gaps', 'w', 'zig', 'fol', 'lr', 'g', 'narrowW', 'shift', 'body'];
-      return planFeatures(P, rng(n * 104729 + P.age * 7717 + 3)).map(F => { const o = {}; for (const k of keys) if (F[k] !== undefined && F[k] !== 0 && F[k] !== false) o[k] = typeof F[k] === 'number' ? +F[k].toFixed(2) : F[k]; return o; });
+      const P = levelParams(stageOf(n, age), age), keys = ['type', 'first', 'rails', 'len', 'h', 'd', 'parts', 'k', 'li', 'gaps', 'w', 'zig', 'fol', 'lr', 'g', 'narrowW', 'shift', 'body'];
+      return planFeatures(P, rng(P.n * 104729 + P.age * 7717 + 3)).map(F => { const o = {}; for (const k of keys) if (F[k] !== undefined && F[k] !== 0 && F[k] !== false) o[k] = typeof F[k] === 'number' ? +F[k].toFixed(2) : F[k]; return o; });
     }
     // Every jump in a level: where it lands against its landing zone (metres of deck before and after the touch-down point).
     function landings(n, age) {
@@ -4941,6 +5212,20 @@ h2 {
 })();
 </script>
 <script>
+// The menu says when the game can be played without a signal: always in the iPhone app (every file is inside it),
+// and on the web once the offline copy (the game, the 3D library and the font) has been saved on this device.
+(() => {
+  const note = document.getElementById('offlineNote');
+  if (!note) return;
+  if (location.protocol === 'selenaroller:') { note.hidden = false; return; }
+  if (!('serviceWorker' in navigator) || !window.caches || location.protocol !== 'https:') return;
+  const check = () => caches.keys()
+    .then(keys => Promise.all(keys.filter(k => k.indexOf('selena-roller') === 0).map(k => caches.open(k).then(c => Promise.all([c.match('./three.min.js'), c.match('./fonts/rubik-latin.woff2')])))))
+    .then(sets => { if (sets.some(f => f[0] && f[1])) note.hidden = false; })
+    .catch(() => {});
+  navigator.serviceWorker.ready.then(check);
+  setTimeout(check, 4000);
+})();
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
 }

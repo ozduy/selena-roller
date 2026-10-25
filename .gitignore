@@ -1,0 +1,25 @@
+# Apple signing material: keys, certificates and profiles never go into git.
+*.p8
+*.p12
+*.pem
+*.cer
+*.certSigningRequest
+*.mobileprovision
+*.provisionprofile
+*.keychain
+*.keychain-db
+# Saved copies of a key as text (for example the base64 made for the GitHub secret) and local settings files
+*.p8.txt
+*.b64
+*.base64
+.env*
+
+# Made by XcodeGen and Xcode during a build
+ios/*.xcodeproj/
+ios/build/
+DerivedData/
+xcuserdata/
+*.xcarchive/
+*.ipa
+*.dSYM.zip
+.DS_Store
