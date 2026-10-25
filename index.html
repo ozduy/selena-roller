@@ -13,9 +13,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <title>Selena Roller</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800;900&display=swap">
+<link rel="stylesheet" href="fonts/rubik.css">
 <style>
 [hidden] { display: none !important; }
 html, body { margin: 0; }
@@ -138,6 +136,21 @@ h2 {
   background: linear-gradient(180deg, #8fe3ff, #2d9bff 60%, #1f6fe0);
 }
 .bar .flag { position: absolute; right: -6px; top: 50%; width: 22px; height: 22px; margin-top: -15px; filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.35)); }
+/* Narrower phones: slightly tighter spacing and text in the top bar, so the world name still fits next to a
+   two-digit level and a three-digit star count (otherwise it is cut short, for example "Cloud King..."). */
+@media (max-width: 429px) {
+  .hud { gap: 8px; }
+  .lvlbox { padding: 6px 10px 9px; }
+  .lvltop { gap: 6px; }
+  .lvllabel { font-size: 15px; letter-spacing: 0.01em; }
+  .lvlworld { font-size: 13px; }
+  .hud .pill { gap: 4px; padding: 6px 11px 6px 6px; font-size: 18px; }
+  .hud .pill svg { width: 26px; height: 26px; }
+}
+@media (max-width: 380px) {
+  .lvllabel { font-size: 14px; }
+  .lvlworld { font-size: 12px; }
+}
 
 .hud2 {
   position: absolute; left: 0; right: 0; box-sizing: border-box;
@@ -259,6 +272,11 @@ h2 {
   box-shadow: 0 4px 0 var(--gold-deep), inset 0 2px 0 rgba(255, 255, 255, 0.55);
 }
 .agehint { margin: -4px 0 0; font-size: 15px; font-weight: 700; color: var(--muted); text-align: center; }
+.menulinks { margin: -8px 0 -10px; display: flex; justify-content: center; align-items: center; font-size: 14px; font-weight: 700; color: var(--muted); }
+.menulinks a { color: inherit; text-decoration: none; padding: 7px 12px; border-radius: 12px; }
+.menulinks a:active { background: var(--chip); }
+.menulinks a:focus-visible { outline: 3px solid var(--gold); outline-offset: -2px; }
+.offlinenote { margin: -6px 0 -8px; font-size: 13px; font-weight: 800; color: #1f9d55; text-align: center; }
 .row { display: flex; gap: 10px; align-items: stretch; }
 .chip {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex: 1 1 0; min-width: 0;
@@ -516,6 +534,9 @@ h2 {
         <button class="chip" id="soundBtn"><svg><use id="soundIcon" href="#i-sound"/></svg><span id="soundLabel">Sound on</span></button>
         <div class="pill"><svg><use href="#i-star"/></svg><span id="menuStars">0</span></div>
       </div>
+      <!-- Full addresses: the iPhone app opens these in Safari (a relative link would point inside the app). -->
+      <p class="menulinks"><a href="https://ozduy.github.io/selena-roller/support.html" target="_blank" rel="noopener">Help</a><span aria-hidden="true">&middot;</span><a href="https://ozduy.github.io/selena-roller/privacy.html" target="_blank" rel="noopener">Privacy</a></p>
+      <p class="offlinenote" id="offlineNote" hidden>&#10003; Ready to play offline</p>
     </div>
   </section>
 
@@ -594,7 +615,8 @@ h2 {
     };
   }
   const lin = hex => new THREE.Color(hex).convertSRGBToLinear();
-  const DEBUG = (() => { try { return /debug/i.test(String(window.location.href)); } catch (e) { return false; } })();
+  const IN_APP = location.protocol === 'selenaroller:';   // the iPhone app serves the game from selenaroller://localhost/
+  const DEBUG = !IN_APP && (() => { try { return /debug/i.test(String(window.location.href)); } catch (e) { return false; } })();
   let headless = false;   // true while the test bot runs a level without drawing
 
   // ---------- Saved progress (this device only) ----------
@@ -737,7 +759,9 @@ h2 {
   let renderer = null;
   try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance', stencil: false }); } catch (e) { renderer = null; }
   if (!renderer) {
-    $('menu').innerHTML = '<div class="panel center nogl"><h2>3D is switched off</h2><p>This browser could not start 3D graphics. Try opening the link in Chrome or Safari.</p></div>';
+    $('menu').innerHTML = IN_APP
+      ? '<div class="panel center nogl"><h2>3D could not start</h2><p>The 3D view could not start. Close Selena Roller fully and open it again.</p></div>'
+      : '<div class="panel center nogl"><h2>3D is switched off</h2><p>This browser could not start 3D graphics. Try opening the link in Chrome or Safari.</p></div>';
     $('who').hidden = true; $('menu').hidden = false;
     return;
   }
@@ -4869,7 +4893,8 @@ h2 {
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') input.keyU = false;
     if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') input.keyD = false;
   });
-  window.addEventListener('blur', () => { input.keyL = input.keyR = input.keyU = input.keyD = false; endDrag(); });
+  // Leaving the window (another app or window in front) pauses a level that is under way.
+  window.addEventListener('blur', () => { input.keyL = input.keyR = input.keyU = input.keyD = false; endDrag(); if (!headless) pause(); });
 
   // The menu is on screen before start-up has finished (it waits a moment for the web font): a tap there finishes it first.
   $('playBtn').addEventListener('click', startPlay);
@@ -4957,6 +4982,9 @@ h2 {
     if (document.hidden) { pause(); saveNow(); stopLoop(); if (roll && actx) roll.g.gain.setTargetAtTime(0, actx.currentTime, 0.05); }
     else startLoop();
   });
+  // The iPhone app calls this when it stops being the active app (Notification Centre, Control Centre, Siri,
+  // a call). The page stays visible then, so visibilitychange does not fire and the level would roll on.
+  window.selenaPause = () => { if (!headless) pause(); };
   // Only unsaved progress is written on the way out, so closing an older tab never rolls back what a newer tab saved.
   window.addEventListener('pagehide', () => { saveNow(); });
   // Another tab saved: take in its progress (never lowering anything) while this tab is not in the middle of a level.
@@ -5184,6 +5212,20 @@ h2 {
 })();
 </script>
 <script>
+// The menu says when the game can be played without a signal: always in the iPhone app (every file is inside it),
+// and on the web once the offline copy (the game, the 3D library and the font) has been saved on this device.
+(() => {
+  const note = document.getElementById('offlineNote');
+  if (!note) return;
+  if (location.protocol === 'selenaroller:') { note.hidden = false; return; }
+  if (!('serviceWorker' in navigator) || !window.caches || location.protocol !== 'https:') return;
+  const check = () => caches.keys()
+    .then(keys => Promise.all(keys.filter(k => k.indexOf('selena-roller') === 0).map(k => caches.open(k).then(c => Promise.all([c.match('./three.min.js'), c.match('./fonts/rubik-latin.woff2')])))))
+    .then(sets => { if (sets.some(f => f[0] && f[1])) note.hidden = false; })
+    .catch(() => {});
+  navigator.serviceWorker.ready.then(check);
+  setTimeout(check, 4000);
+})();
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
 }
