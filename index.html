@@ -1979,8 +1979,8 @@ h2 {
       P.obsMult = Math.min(1.25 + 0.0075 * x, 1.4);
       P.cpEvery = Math.round(4.5 * P.speed);
     }
-    // longer stages than the first version, still short and intense like the sky runners: 1.25 times the old length
-    P.len = Math.round(P.len * 1.25);
+    // long stages, like the sky runners: 2.2 times the old length, with checkpoints along the way
+    P.len = Math.round(P.len * 2.2);
     P.celebration = n % 5 === 0 && n !== 30;
     P.grand = n === 30;
     if (n > 30) {
@@ -2124,7 +2124,7 @@ h2 {
   function featCount(n, age) {
     if (n < 2) return 0;
     const k = [n < 10 ? 1 : 2, n < 6 ? 1 : n < 16 ? 2 : 3, n < 5 ? 1 : n < 12 ? 2 : n < 22 ? 3 : 4, n < 4 ? 1 : n < 9 ? 2 : n < 16 ? 3 : n < 24 ? 4 : 5][age];
-    return Math.round((k + (age > 0 && n % 5 === 0 && n !== 30 ? 1 : 0)) * 1.4);
+    return Math.round((k + (age > 0 && n % 5 === 0 && n !== 30 ? 1 : 0)) * 2);
   }
   function planFeatures(P, rf) {
     const n = P.n, age = P.age, out = [];
@@ -2137,7 +2137,7 @@ h2 {
     for (const t of types) per[t] = (per[t] || 0) + 1;
     while (types.length < want) {
       const last = types[types.length - 1];
-      const pool = open.filter(t => t !== last && (per[t] || 0) < ((t === 'IS' || t === 'RJ') && !age ? 1 : 2));
+      const pool = open.filter(t => t !== last && (per[t] || 0) < ((t === 'IS' || t === 'RJ') && !age ? 2 : 4));
       if (!pool.length) break;
       let tot = 0; for (const t of pool) tot += wt(t);
       let v = rf() * tot, pick = pool[pool.length - 1];
