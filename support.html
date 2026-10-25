@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Help for Selena Roller: how to play, the helpers, sound, saving and how to contact us.">
+<meta name="theme-color" content="#2a63b8">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Help and Support | Selena Roller</title>
+<style>
+:root {
+  --text: #ffffff;
+  --muted: #c4d0ea;
+  --glass: rgba(14, 22, 48, 0.86);
+  --glass-top: rgba(40, 58, 112, 0.88);
+  --glass-edge: rgba(255, 255, 255, 0.18);
+  --chip: rgba(255, 255, 255, 0.10);
+  --chip-edge: rgba(255, 255, 255, 0.16);
+  --go: #22c463; --go-top: #5cf096; --go-deep: #127a3c;
+  --blue: #2d84f5; --blue-top: #6db4ff; --blue-deep: #1a4fa8;
+  --gold: #ffc531;
+  --jump: #39e06c; --fly: #45bfff; --magnet: #ff4fae; --shield: #4fe9ff;
+  --link: #8fd0ff;
+  --display: ui-rounded, "SF Pro Rounded", "Arial Rounded MT Bold", "Trebuchet MS", system-ui, sans-serif;
+  --body: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; min-height: 100vh; color: var(--text); font-family: var(--body); font-size: 17px; line-height: 1.55;
+  background: #6fa3d8;
+  padding: calc(env(safe-area-inset-top, 0px) + 24px) max(16px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 32px) max(16px, env(safe-area-inset-left, 0px));
+}
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1;
+  background:
+    radial-gradient(120% 40% at 15% 100%, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 60%),
+    radial-gradient(90% 35% at 90% 104%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0) 60%),
+    linear-gradient(180deg, #1e5fb8 0%, #4f8fd2 34%, #a9cdee 72%, #e3eef7 100%);
+}
+.wrap { max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+header { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 4px 0 6px; }
+.badge { width: 88px; height: 88px; border-radius: 22px; box-shadow: 0 10px 24px rgba(4, 12, 40, 0.35), 0 0 0 3px rgba(255, 255, 255, 0.6); }
+.logo { margin: 0; font-family: var(--display); font-weight: 900; line-height: 0.9; text-transform: uppercase; display: flex; flex-direction: column; align-items: center; transform: rotate(-3deg); }
+.logo .l1 { font-size: clamp(44px, 13vw, 64px); color: #fff; text-shadow: 0 3px 0 #ff5aa6, 0 6px 0 #c22f73, 0 9px 0 #7d1b4b, 0 14px 22px rgba(0, 0, 0, 0.4); }
+.logo .l2 { font-size: clamp(30px, 9vw, 44px); color: var(--gold); text-shadow: 0 3px 0 #e48a00, 0 6px 0 #9a5200, 0 11px 18px rgba(0, 0, 0, 0.4); }
+.pagetitle { margin: 14px 0 0; font-family: var(--display); font-weight: 800; font-size: 24px; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35); }
+.tag { margin: 0; font-weight: 700; color: #eef4ff; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); }
+.panel {
+  background: linear-gradient(180deg, var(--glass-top), var(--glass));
+  border: 1px solid var(--glass-edge); border-radius: 26px; padding: 20px 20px 18px;
+  box-shadow: 0 20px 40px rgba(2, 6, 20, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -3px 0 rgba(0, 0, 0, 0.22);
+  -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%);
+}
+h2 { margin: 0 0 10px; font-family: var(--display); font-weight: 900; font-size: 21px; letter-spacing: 0.01em; text-transform: uppercase; color: var(--gold); text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3); }
+h3 { margin: 0; font-family: var(--display); font-weight: 900; font-size: 18px; text-transform: uppercase; letter-spacing: 0.02em; }
+p { margin: 0 0 12px; }
+p:last-child, ul:last-child { margin-bottom: 0; }
+ul { margin: 0 0 12px; padding-left: 0; list-style: none; display: grid; gap: 8px; }
+li { position: relative; padding-left: 30px; }
+li::before {
+  content: ""; position: absolute; left: 0; top: 0.2em; width: 20px; height: 20px;
+  background: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2.2l2.95 6.1 6.7.85-4.9 4.6 1.25 6.65L12 17.15 6 20.4l1.25-6.65-4.9-4.6 6.7-.85z' fill='%23ffc531' stroke='%239c6300' stroke-width='1.3' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+.muted { color: var(--muted); }
+a { color: var(--link); text-underline-offset: 3px; text-decoration-thickness: 1.5px; overflow-wrap: anywhere; }
+a:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; border-radius: 6px; }
+strong { color: #fff; }
+.helpers { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 14px; }
+@media (min-width: 560px) { .helpers { grid-template-columns: 1fr 1fr; } }
+.helper {
+  display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: start;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--chip-edge); border-radius: 20px; padding: 14px;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+}
+.helper p { margin: 4px 0 0; font-size: 16px; }
+.helper .from { display: inline-block; margin-top: 6px; font-weight: 800; font-size: 14px; padding: 2px 10px; border-radius: 99px; background: rgba(0, 0, 0, 0.3); color: var(--hc); }
+.medal {
+  width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center;
+  background: radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.95), var(--hc) 62%);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.55), 0 0 22px var(--hc), 0 6px 0 rgba(0, 0, 0, 0.2);
+}
+.medal svg { width: 38px; height: 38px; color: #fff; filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.25)); }
+.jump { --hc: var(--jump); } .fly { --hc: var(--fly); } .magnet { --hc: var(--magnet); } .shield { --hc: var(--shield); }
+.keys { font-size: 16px; }
+kbd { font-family: var(--display); font-weight: 800; font-size: 14px; padding: 1px 7px; border-radius: 7px; background: var(--chip); border: 1px solid var(--chip-edge); box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3); white-space: nowrap; }
+.buttons { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 4px; }
+.btn {
+  --c: var(--blue); --c-top: var(--blue-top); --c-deep: var(--blue-deep);
+  display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 10px 22px; border-radius: 18px;
+  font-family: var(--display); font-weight: 900; font-size: 18px; letter-spacing: 0.02em; text-transform: uppercase; text-decoration: none;
+  color: #fff; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+  background: linear-gradient(180deg, var(--c-top) 0%, var(--c) 58%);
+  box-shadow: 0 5px 0 var(--c-deep), 0 10px 20px rgba(0, 0, 0, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.45);
+}
+.btn.go { --c: var(--go); --c-top: var(--go-top); --c-deep: var(--go-deep); }
+.btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--c-deep), inset 0 2px 0 rgba(255, 255, 255, 0.45); }
+footer { text-align: center; font-weight: 700; color: #1b2c55; font-size: 15px; padding-top: 4px; }
+footer a { color: #13306e; white-space: nowrap; }
+footer p { margin: 0 0 6px; }
+footer .credits { font-weight: 600; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img class="badge" src="icon-192.png" width="88" height="88" alt="">
+    <h1 class="logo"><span class="l1">Selena</span><span class="l2">Roller</span></h1>
+    <p class="pagetitle">Help and Support</p>
+    <p class="tag">Roll through the sky. Grab every star.</p>
+  </header>
+
+  <main class="wrap">
+    <section class="panel" aria-labelledby="play">
+      <h2 id="play">How to play</h2>
+      <ul>
+        <li><strong>Slide your finger left and right to steer.</strong> The ball rolls forward by itself.</li>
+        <li>Collect the gold stars and roll over the finish line. Finishing a level gives you 10 bonus stars.</li>
+        <li>Pass the checkpoints on the way. If the ball rolls off the edge, it comes back at the last checkpoint. Tap the screen to go again. There is no game over.</li>
+        <li>Pick a speed on the menu: <strong>Slow</strong>, <strong>Normal</strong> or <strong>Zoom</strong>. You can change it at any time.</li>
+        <li>Use the arrows on the menu to play again any level you have reached.</li>
+        <li>Tap the pause button at the top left to pause, start the level again or go back to the menu.</li>
+      </ul>
+      <p class="keys muted">Playing on a computer? Steer with <kbd>&larr;</kbd> <kbd>&rarr;</kbd> or <kbd>A</kbd> <kbd>D</kbd>, start with <kbd>Enter</kbd> or <kbd>Space</kbd>, and pause with <kbd>P</kbd> or <kbd>Esc</kbd>.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="worlds">
+      <h2 id="worlds">Worlds and levels</h2>
+      <p>The levels take turns in five worlds: Sunny Bay, Golden Isles, Frosty Peaks, Cloud Kingdom and Moonlit Bay.</p>
+      <p>There are 30 levels that build up a little at a time, and the tracks keep coming after level 30. Each new obstacle first appears on its own, moving slowly, before it turns up with others.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="helpers">
+      <h2 id="helpers">The helpers</h2>
+      <div class="helpers">
+        <div class="helper jump">
+          <div class="medal" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 1.4l4.2 4.6h-2.7v2.9h-3V6H7.8z" fill="currentColor"/><path d="M6.6 10.6h10.8M6.6 21.8h10.8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M8 12.5l8 1.5-8 1.6 8 1.6-8 1.6 8 1.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div><h3>Super Jump</h3><p>The ball bounces along by itself in big hops and only lands on safe track.</p><span class="from">From level 2</span></div>
+        </div>
+        <div class="helper fly">
+          <div class="medal" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12.6" r="3.7" fill="currentColor"/><path d="M8.1 11.6C6.4 8.3 3.6 6.7 1.1 6.9c.8 1.3 1.2 2.6 1.3 3.9-.7.2-1.1.6-1.2 1.2 1 .2 1.8.6 2.4 1.2-.5.4-.7.9-.7 1.5 1.9-.2 3.9.2 5.6 1.2z" fill="currentColor"/><path d="M15.9 11.6c1.7-3.3 4.5-4.9 7-4.7-.8 1.3-1.2 2.6-1.3 3.9.7.2 1.1.6 1.2 1.2-1 .2-1.8.6-2.4 1.2.5.4.7.9.7 1.5-1.9-.2-3.9.2-5.6 1.2z" fill="currentColor"/></svg></div>
+          <div><h3>Fly</h3><p>The ball grows wings, flies above the track to collect stars in the sky, then glides down safely.</p><span class="from">From level 5</span></div>
+        </div>
+        <div class="helper magnet">
+          <div class="medal" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4.8 3.2h4.8v8.6a2.4 2.4 0 0 0 4.8 0V3.2h4.8v8.7a7.2 7.2 0 0 1-14.4 0z" fill="currentColor"/><path d="M4.8 3.2h4.8v3.4H4.8zM14.4 3.2h4.8v3.4h-4.8z" fill="#000" opacity=".25"/></svg></div>
+          <div><h3>Star Magnet</h3><p>Pulls nearby stars into the ball.</p><span class="from">From level 1</span></div>
+        </div>
+        <div class="helper shield">
+          <div class="medal" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="13" r="3.9" fill="currentColor"/><path d="M7 9.4a5.8 5.8 0 0 1 3.7-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+          <div><h3>Bubble Shield</h3><p>If the ball rolls off the edge, the bubble carries it back onto the track. It works once.</p><span class="from">From level 6</span></div>
+        </div>
+      </div>
+      <p>To get a helper, roll through a helper bubble on the track, or fill the star meter at the top right by collecting stars. A helper that is waiting its turn shows as a small icon under the one that is running.</p>
+      <p><strong>A helping hand:</strong> from level 6, if the ball falls a few times in the same part of a level, the game lends a hand. Rails appear along the edges there, obstacles slow down, and a helper bubble may be waiting for you.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="balls">
+      <h2 id="balls">Balls</h2>
+      <p>Tap <strong>Balls</strong> on the menu to pick a ball. There are 12 to choose from. Selena is yours from the start, and the other 11 are unlocked with the stars you collect in the game, from 15 to 300 stars each. There are no in-app purchases.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="sound">
+      <h2 id="sound">Sound</h2>
+      <ul>
+        <li>Tap <strong>Sound on</strong> or <strong>Sound off</strong> on the menu to switch sound on or off.</li>
+        <li>Sound starts after your first tap on the screen.</li>
+        <li>On iPhone the game is quiet in Silent mode. If you hear nothing, check that Silent mode is off (the switch on the side of the iPhone, or the Action button or Control Centre on newer models), then turn the volume up with the buttons on the side.</li>
+        <li>If sound stops after a call or an alarm, tap the screen to bring it back.</li>
+      </ul>
+    </section>
+
+    <section class="panel" aria-labelledby="saving">
+      <h2 id="saving">Saving your progress</h2>
+      <p>Your progress saves by itself on your device: your stars, the levels you have reached, your balls and your settings.</p>
+      <p>There is no account, so progress is not synced between devices, but it can come back from your own iPhone backup. Deleting the app deletes your progress.</p>
+      <p class="muted">In the web version, progress is kept by your browser for this website. Clearing website data or using a private window removes it, and Safari may clear it if you have not opened the game for a while. Adding the game to your Home Screen helps keep it.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="trouble">
+      <h2 id="trouble">Something not working?</h2>
+      <ul>
+        <li>Close the game completely and open it again.</li>
+        <li>Make sure your iPhone has the latest iOS update.</li>
+        <li>Still stuck? Email us with your iPhone model, the iOS version, the level and what happened. A screenshot helps.</li>
+      </ul>
+    </section>
+
+    <section class="panel" aria-labelledby="contact">
+      <h2 id="contact">Contact</h2>
+      <p>Questions, problems or ideas? Email <a href="mailto:ozhanduyan@gmail.com?subject=Selena%20Roller">ozhanduyan@gmail.com</a>. See also our <a href="privacy.html">Privacy Policy</a>.</p>
+      <div class="buttons">
+        <a class="btn" href="mailto:ozhanduyan@gmail.com?subject=Selena%20Roller">Email us</a>
+        <a class="btn go" href="./">Play in your browser</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Ozhan Duyan &middot; <a href="privacy.html">Privacy Policy</a> &middot; <a href="./">Selena Roller</a></p>
+    <p class="credits">Uses three.js (MIT licence) and the Rubik font (SIL Open Font License). <a href="THIRD-PARTY-NOTICES.txt">Licence notices</a></p>
+  </footer>
+</div>
+</body>
+</html>

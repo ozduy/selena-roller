@@ -1,9 +1,18 @@
 // Keeps Selena Roller playable without a signal once it has been opened.
-const CACHE = 'selena-roller-v1';
-const CORE = ['./', './index.html', './three.min.js', './manifest.webmanifest', './icon-180.png', './icon-192.png'];
+const CACHE = 'selena-roller-v3';
+const CORE = [
+  './', './index.html', './three.min.js', './manifest.webmanifest', './icon-180.png', './icon-192.png',
+  './fonts/rubik.css', './fonts/rubik-latin.woff2', './fonts/rubik-latin-ext.woff2',
+  './fonts/rubik-cyrillic.woff2', './fonts/rubik-cyrillic-ext.woff2', './fonts/rubik-hebrew.woff2', './fonts/rubik-arabic.woff2'
+];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(CORE)).then(() => self.skipWaiting()));
+  // 'reload' skips the browser's own HTTP cache, so a new version never saves files left over from the old one.
+  event.waitUntil(
+    caches.open(CACHE)
+      .then(cache => cache.addAll(CORE.map(url => new Request(url, { cache: 'reload' }))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', event => {
@@ -20,6 +29,11 @@ self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET') return;
   if (req.mode === 'navigate') {
+    // Only the game's own address is saved as the game. Other pages here (privacy.html, support.html) load
+    // normally and are never saved, or the game would open as one of them without a signal.
+    const scope = new URL(self.registration.scope).pathname;
+    const path = new URL(req.url).pathname;
+    if (path !== scope && path !== scope + 'index.html') return;
     event.respondWith(
       fetch(req)
         .then(res => {
