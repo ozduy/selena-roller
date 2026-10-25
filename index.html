@@ -619,8 +619,11 @@ h2 {
     { range: '9+', word: 'Turbo', icon: '#i-cheetah', hint: 'Turbo speed for ages 9 and up', v1: 7.1, tau: 0.05, cap: 2.0, dead: 2, sens: 9.5, accel: 3.6, rollIn: 0.4, help: [4, 5, 6], c: 1 }
   ];
   const ageOf = () => clamp(save.speed | 0, 0, 3);
+  // Each level plays as a further stage of the difficulty plan: level 1 already starts at stage 3 (ages 3-4) up to
+  // stage 10 (ages 9+), and every level moves 1.5 to 1.8 stages on. Past stage 30 the endless plan takes over.
+  function stageOf(level, age) { return level + [2, 5, 7, 9][age] + Math.floor((level - 1) * [0.5, 0.6, 0.7, 0.8][age]); }
   function ageSpeed(age, n, base) {
-    if (!age) return 0.88 * base;
+    if (!age) return base;
     return AGES[age].v1 * (1 + 0.5 * Math.min(1, (n - 1) / 29)) * (n > 30 ? 1 + Math.min(0.045, 0.00225 * (n - 30)) : 1);
   }
 
@@ -1143,6 +1146,13 @@ h2 {
       land: { kind: 'islands', sand: 0x6a6a7a, grass: 0x2f4a4a, rock: 0x45475a, snow: 0xc8d2e8, snowLine: 0.75, lights: true },
       cloud: { top: 0x8a9cc8, bottom: 0x2e3a66, a: 0.35, b: 0.28 },
       deck: 'stone', body: 0x2c3d78, under: 0x0d1430, rail: 0x2fd3c4, stripe: 0xffffff, bridge: 'steel', trimGlow: 0xffa640 },
+    { name: 'Sky City',
+      sky: { zenith: 0x2f8ff0, horizon: 0xd6f0ff, ground: 0x9fb4c6, sun: 0xfff6e6, el: 55, az: -20, size: 0.03, sunI: 1.5, glow: 1.0, glowH: 0.2, stars: 0, envSun: 20, envBoost: 1.05 },
+      light: { color: 0xfff4e6, i: 2.7 }, exposure: 1.02, envI: 1.25, fog: [80, 1500],
+      sea: { deep: 0x3c5a72, sky: 0xb8d4e6, glint: 0.6 },
+      land: { kind: 'city', sand: 0xd8dde4, grass: 0x7fa86a, rock: 0x9aa4ae, snow: 0xffffff, snowLine: 0.9 },
+      cloud: { top: 0xffffff, bottom: 0xc8dcec, a: 0.3, b: 0.2 },
+      deck: 'oak', body: 0x2aa8e0, under: 0x163a52, rail: 0xe8343a, stripe: 0xffffff, bridge: 'steel', trimGlow: 0 },
     { name: 'Rainbow Heights',
       sky: { zenith: 0x1d78e8, horizon: 0xc4ecff, ground: 0x5fa8d0, sun: 0xfff6e0, el: 58, az: 22, size: 0.03, sunI: 1.5, glow: 1.0, glowH: 0.2, stars: 0, envSun: 20, envBoost: 1.05 },
       light: { color: 0xfff4e4, i: 2.7 }, exposure: 1.02, envI: 1.25, fog: [70, 1700],
@@ -1456,6 +1466,7 @@ h2 {
   // Floating islands beside the course at about its height, in every world: grass (snow in the ice world) on top, rock
   // hanging below and a few trees on the bigger ones. They keep well clear of the deck so they never hide the way ahead.
   function nearIslands(lv, W, r, pal, sunC, fillC, parts) {
+    if (W.land.kind === 'city') return;
     const ice = W.land.kind === 'ice', lenM = lv.N * L, one = c => ({ sand: c, grass: c, rock: c, snow: c });
     const topPal = one(ice ? pal.snow : pal.grass), rockPal = one(ice ? lin(0x9cc4dc) : pal.rock), treePal = one(ice ? lin(0x2f6a5a) : pal.grass.clone().multiplyScalar(0.62));
     let z = 25 + r() * 20;
@@ -1506,6 +1517,37 @@ h2 {
     });
     return mergeGeometries(geos);
   }
+  // A city far below the course: blocks of towers on a grid of streets, the tallest ones standing beside the course.
+  function windowTexture() {
+    const [cv, c] = canvas2d(64, 128);
+    c.fillStyle = '#ffffff'; c.fillRect(0, 0, 64, 128);
+    for (let y = 6; y < 124; y += 10) for (let x = 5; x < 60; x += 11) { const v = 140 + ((x * 7 + y * 13) % 60); c.fillStyle = rgb(v - 40, v - 15, v + 20); c.fillRect(x, y, 7, 6); }
+    return tex(cv, true, 4, true);
+  }
+  let cityMat = null;
+  function buildCity(r, lenM, lv) {
+    if (!cityMat) cityMat = new THREE.MeshStandardMaterial({ map: windowTexture(), roughness: 0.55, metalness: 0.1 });
+    const spots = [], tints = [0xffffff, 0xe6eef6, 0xd2deea, 0xf2ece2, 0xbcd0e2, 0xdfe8ef];
+    const gy = SEA_Y + 1;
+    for (let z = 200; z > -(lenM + 700); z -= 26) {
+      const ss = clamp(-z, 0, lenM), cx = lv ? sampleLv(lv, lv.cx, ss) : 0, ty = lv ? sampleLv(lv, lv.y, ss) : 0;
+      for (let x = -520; x <= 520; x += 26) {
+        if (r() < 0.18) continue;
+        const d = Math.abs(x - cx), near = d < 60;
+        // keep a clear canyon under the course, with tall towers lining it
+        if (d < 16) continue;
+        const h = near ? lerp(30, ty - gy - 4, r()) : 12 + Math.pow(r(), 2.2) * (d < 200 ? 75 : 45);
+        const w = 9 + r() * 10, dd = 9 + r() * 10;
+        spots.push([x + (r() - 0.5) * 6, gy, z + (r() - 0.5) * 6, w, Math.max(8, h), dd, tints[(r() * tints.length) | 0]]);
+      }
+    }
+    const geo = UNIT_BOX.clone().translate(0, 0.5, 0), uv = geo.attributes.uv;
+    const mesh = new THREE.InstancedMesh(geo, cityMat, spots.length), M = new THREE.Matrix4(), col = new THREE.Color();
+    spots.forEach((p, i) => { M.compose(_p0.set(p[0], p[1], p[2]), _q0.identity(), _s0.set(p[3], p[4], p[5])); mesh.setMatrixAt(i, M); mesh.setColorAt(i, col.copy(lin(p[6]))); });
+    mesh.instanceMatrix.needsUpdate = true; if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    mesh.matrixAutoUpdate = false;
+    scenery.add(mesh);
+  }
   function buildScenery(W, lenM, seed, lv) {
     disposeScenery();
     const r = rng(seed * 31 + 7), Lp = W.land;
@@ -1513,6 +1555,7 @@ h2 {
     const sunC = lin(W.light.color).multiplyScalar(W.light.i * 0.85), fillC = lin(W.sea.sky).lerp(lin(W.sky.horizon), 0.5).multiplyScalar(W.sky.stars ? 1.4 : 1);
     const parts = [], lightPts = [];
     scenery = new THREE.Group();
+    if (Lp.kind === 'city') buildCity(r, lenM, lv);
     if (Lp.kind === 'floating') {
       const rockPal = { sand: pal.rock, grass: pal.rock, rock: pal.rock, snow: pal.rock }, grassPal = { sand: pal.grass, grass: pal.grass, rock: pal.grass, snow: pal.grass };
       for (let i = 0; i < 16; i++) {
@@ -1935,6 +1978,8 @@ h2 {
       P.obsMult = Math.min(1.25 + 0.0075 * x, 1.4);
       P.cpEvery = Math.round(4.5 * P.speed);
     }
+    // long stages, like the sky runners: about 1.6 times the old length
+    P.len = Math.round(P.len * 1.6);
     P.celebration = n % 5 === 0 && n !== 30;
     P.grand = n === 30;
     if (n > 30) {
@@ -1960,6 +2005,9 @@ h2 {
     // P.speed is the level's base speed: obstacle clocks and spacing are tied to the distance rolled at this speed, so they
     // look and time the same at every age. P.vel is how fast the ball really rolls for the age choice.
     P.vel = ageSpeed(P.age, n, P.speed);
+    // the ball also picks up speed through the level: up to this share faster by the finish
+    P.ramp = [0.12, 0.18, 0.22, 0.25][P.age];
+    P.velMax = P.vel * (1 + P.ramp);
     P.ratio = P.vel / P.speed;
     P.corr = n <= 5 ? 3.0 : n <= 10 ? 2.5 : n <= 20 ? 2.2 : n <= 30 ? 2.0 : 1.8;
     P.decision = n <= 10 ? 3.0 : n <= 20 ? 2.2 : 1.5;
@@ -2074,7 +2122,7 @@ h2 {
   function featCount(n, age) {
     if (n < 2) return 0;
     const k = [n < 10 ? 1 : 2, n < 6 ? 1 : n < 16 ? 2 : 3, n < 5 ? 1 : n < 12 ? 2 : n < 22 ? 3 : 4, n < 4 ? 1 : n < 9 ? 2 : n < 16 ? 3 : n < 24 ? 4 : 5][age];
-    return k + (age > 0 && n % 5 === 0 && n !== 30 ? 1 : 0);
+    return Math.round((k + (age > 0 && n % 5 === 0 && n !== 30 ? 1 : 0)) * 1.6);
   }
   function planFeatures(P, rf) {
     const n = P.n, age = P.age, out = [];
@@ -2136,7 +2184,7 @@ h2 {
         F.k = first ? 1 : clamp(1 + Math.floor(t * lerp(1.2, 3.2, c) + rf() * 0.9), 1, Math.round(lerp(2, 4, c)));
         // at high speed the islands stay two steps long and the gaps at least two steps wide, so every hop and every
         // island lasts long enough to see the next one and steer for it
-        const quick = P.vel > 7.5;
+        const quick = P.velMax > 7.5;
         F.li = first || c < 0.5 || quick ? 2 : (rf() < 0.35 + 0.4 * c ? 1 : 2);
         F.gaps = [];
         for (let q = 0; q <= F.k; q++) F.gaps.push(first ? 1 : Math.max(quick ? 2 : 1, clamp(1 + (rf() < c * (0.4 + 0.6 * t) ? 1 : 0) + (c > 0.9 && t > 0.6 && rf() < 0.4 ? 1 : 0), 1, 3)));
@@ -2161,13 +2209,13 @@ h2 {
 
   // ---------- Level generator: seeded by the level number and the age choice, so a level is the same every time ----------
   const TEACH_RAILS = { BS: 1, RS: 1, SL: 1, SS: 1, HH: 1, HF: 1, SC: 1, BO: 1 };
-  function genLevel(n, age) {
-    const P = levelParams(n, age), r = rng(n * 7919 + 13), rf = rng(n * 104729 + P.age * 7717 + 3);
+  function genLevel(level, age) {
+    const n = stageOf(level, age | 0), P = levelParams(n, age), r = rng(n * 7919 + 13), rf = rng(n * 104729 + P.age * 7717 + 3);
     const feats = planFeatures(P, rf);
     let featBudget = 0; for (const F of feats) featBudget += F.body + 6;
     const N = P.len + featBudget, NS = N * SUB, wBase = P.width;
     const lv = {
-      n, P, N, NS, world: worldFor(n),
+      n: level, P, N, NS, world: worldFor(level),
       cx: new Float32Array(NS + 1), y: new Float32Array(NS + 1), w: new Float32Array(NS + 1), safe: new Float32Array(NS + 1),
       bank: new Float32Array(NS + 1), fol: new Float32Array(NS + 1).fill(P.follow), spd: new Float32Array(NS + 1).fill(1),
       gap: new Uint8Array(N), kind: new Uint8Array(N), bridge: new Uint8Array(N), railL: new Uint8Array(N), railR: new Uint8Array(N),
@@ -2775,6 +2823,17 @@ h2 {
       }
       lv.pickups.sort((a, b) => a.s - b.s);
     }
+    // Ring gates the course runs through, on calm stretches only (never over a gap, jump, bridge, piece or obstacle).
+    lv.rings = [];
+    {
+      let last = -99;
+      for (let i = 12; i < finish - 6; i++) {
+        if (i - last < 12) continue;
+        let ok = true;
+        for (let k = i - 3; k <= i + 3 && ok; k++) if (busy[k] || lv.gap[k] || lv.bridge[k] || lv.kind[k] || lv.feat[k]) ok = false;
+        if (ok) { lv.rings.push(i); last = i; }
+      }
+    }
     for (const o of lv.obstacles) if (o.tune) tunePhase(o, P);
     return lv;
   }
@@ -2813,6 +2872,7 @@ h2 {
     cushion: new THREE.MeshStandardMaterial({ map: cush.map, roughnessMap: cush.roughnessMap, roughness: 1, metalness: 0 }),
     capPaint: new THREE.MeshStandardMaterial({ color: lin(0x2a3b8f), roughness: 0.35, metalness: 0.1 }),
     pylon: new THREE.MeshStandardMaterial({ color: lin(0x1d2a6b), roughness: 0.32, metalness: 0.15 }),
+    ring: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.3, metalness: 0.05 }),
     banner: new THREE.MeshBasicMaterial({ map: bannerTexture(), toneMapped: false }),
     lens: new THREE.MeshBasicMaterial({ color: 0xffffff }),
     glass: new THREE.MeshPhysicalMaterial({ color: lin(0xbfe9f5), roughness: 0.12, metalness: 0, transmission: 0.45, transparent: true, depthWrite: false, envMapIntensity: 1.8 }),
@@ -3045,7 +3105,7 @@ h2 {
   }
   function buildRails(lv, group, disp) {
     buildLv = lv;
-    const high = lv.n <= 5, tubes = high ? [[0.62, 0.085], [0.32, 0.06]] : [[0.45, 0.075]];
+    const high = lv.P.n <= 5, tubes = high ? [[0.62, 0.085], [0.32, 0.06]] : [[0.45, 0.075]];
     const bT = GB(), posts = [], caps = [];
     for (const o of [-1, 1]) {
       const arr = o < 0 ? lv.railL : lv.railR;
@@ -3253,6 +3313,27 @@ h2 {
         for (const zz of [p.s0 + 0.4, p.s1 - 0.4]) { const MM = new THREE.Matrix4(); MM.compose(_p0.set(p.cx0, p.y - 0.62, -zz), _q0.identity(), _s0.set(p.w + 2 * p.A + 0.6, 0.12, 0.16)); beamParts.push({ geometry: UNIT_BOX, matrix: MM }); }
       }
       const bg = mergeGeometries(beamParts), bm = new THREE.Mesh(bg, MAT.trim); bm.receiveShadow = true; bm.matrixAutoUpdate = false; group.add(bm); disp.push(bg);
+    }
+
+    // Ring gates: red and white hoops standing round the deck, their lower half passing under it.
+    if (lv.rings.length) {
+      const parts = [], red = lin(0xe8343a), white = lin(0xf4f6f8);
+      for (const i of lv.rings) {
+        const s = (i + 0.5) * L, rr = sampleLv(lv, lv.w, s) / 2 + 1.5;
+        const g = new THREE.TorusGeometry(rr, 0.3, 10, 56).toNonIndexed();
+        g.translate(sampleLv(lv, lv.cx, s), sampleLv(lv, lv.y, s) + 0.5, -s);
+        const p = g.attributes.position, cols = new Float32Array(p.count * 3), cy = sampleLv(lv, lv.y, s) + 0.5, cx = sampleLv(lv, lv.cx, s);
+        for (let v = 0; v < p.count; v += 3) {
+          const a = Math.atan2((p.getY(v) + p.getY(v + 1) + p.getY(v + 2)) / 3 - cy, (p.getX(v) + p.getX(v + 1) + p.getX(v + 2)) / 3 - cx);
+          const c = Math.floor((a + Math.PI) / TAU * 14) % 2 ? red : white;
+          for (let k = v; k < v + 3; k++) c.toArray(cols, k * 3);
+        }
+        g.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+        parts.push({ geometry: g });
+      }
+      const rg = mergeGeometries(parts), rm = new THREE.Mesh(rg, MAT.ring);
+      rm.castShadow = true; rm.receiveShadow = true; rm.matrixAutoUpdate = false;
+      group.add(rm); disp.push(rg);
     }
 
     // Checkpoint beacons: white until passed, then green.
@@ -3510,7 +3591,7 @@ h2 {
   let state = 'menu', prevState = 'playing', stateTimer = 0, gt = 0, levelStars = 0, lastCp = 0, lastCpIdx = 0, rollIn = 1;
   let hintTimer = 0, steerTotal = 0, fingerDown = false, idleT = 0, assistBoost = false, helpedSections = 0, cleanSection = true, lastBumpT = 0;
   const input = { keyL: false, keyR: false };
-  const levelSpeed = () => lvl.P.vel;
+  const levelSpeed = () => lvl.P.vel * (1 + lvl.P.ramp * clamp((ball.s - START_S) / (lvl.finish * L), 0, 1));
   const bankAt = s => lvl.banked ? arrAt(lvl.bank, s) : 0;
   function autoCentreTime() {
     const P = lvl.P;
@@ -3527,7 +3608,7 @@ h2 {
     if (!assistBoost) return P.forgive;
     return FORGIVE_UP[P.n <= 20 ? 0 : P.n <= 30 ? 1 : 2];
   }
-  function railLimit() { return (lvl.n <= 5 ? 0.085 : 0.075) + 0.12 + R; }
+  function railLimit() { return (lvl.P.n <= 5 ? 0.085 : 0.075) + 0.12 + R; }
 
   function resetBallAt(s) {
     const b = ball;
@@ -3836,7 +3917,7 @@ h2 {
     const b = ball, lv = lvl, bx = cxAt(b.s) + b.lat, by = b.y, bz = -b.s;
     const magR = bonus.type === 'magnet' ? lv.P.magnetR : 0, mr2 = magR * magR;
     const column = b.mode === 'fly' || (b.mode === 'arc' && b.arc.kind === 'sj');
-    const reach = lv.n <= 5 || lv.P.age === 0 ? 1.1 : 0.85;   // a slightly smaller reach from level 6 for ages 5 and up
+    const reach = lv.P.n <= 5 || lv.P.age === 0 ? 1.1 : 0.85;   // a slightly smaller reach from level 6 for ages 5 and up
     for (let i = 0; i < lv.stars.length; i++) {
       const st = lv.stars[i];
       if (!st.alive) continue;
@@ -3904,7 +3985,7 @@ h2 {
       for (const o of lv.obstacles) if (o.sec === sec) o.slow = 0.8;
       for (const p of lv.platforms) if (p.sec === sec) p.slow = 0.8;
     }
-    lv.pendingHelp = f >= th[2] ? (lv.n >= lv.P.unlock.fly ? 'fly' : 'shield') : f >= th[1] ? 'shield' : null;
+    lv.pendingHelp = f >= th[2] ? (lv.P.n >= lv.P.unlock.fly ? 'fly' : 'shield') : f >= th[1] ? 'shield' : null;
   }
   function respawn() {
     const lv = lvl, cp = lv.cps[lastCpIdx], s = cp === 0 ? START_S : (cp + 0.5) * L;
@@ -4008,7 +4089,7 @@ h2 {
   // ---------- Helper bonuses: Super Jump, Fly, Star Magnet, Bubble Shield ----------
   const bonus = { type: null, t: 0, dur: 1, queue: null, queueSrc: null, last: null, skip: 0, rescue: false, ending: false, tickAt: 2, ringShown: -1 };
   const shieldActive = () => bonus.type === 'shield';
-  const unlockedB = t => !!lvl && lvl.n >= lvl.P.unlock[t];
+  const unlockedB = t => !!lvl && lvl.P.n >= lvl.P.unlock[t];
   function nearIntro(s) {
     const lv = lvl, st = s / L;
     return (lv.introStep >= 0 && st >= lv.introStep - 6 && st <= lv.introEnd + 1) || (lv.fIntroStep >= 0 && st >= lv.fIntroStep - 6 && st <= lv.fIntroEnd + 1);
@@ -4518,8 +4599,9 @@ h2 {
       const lift = b.mode === 'arc' ? (b.arc.kind === 'sj' ? 0.5 : 1.3) : b.mode === 'fly' ? 1.4 : b.mode === 'rescue' ? 1 : 0;
       // on hills the view tilts with the track a few metres ahead, so a climb looks like a climb and a drop like a drop
       const sA = b.s + 6, ahead = b.mode === 'roll' && !lvl.gap[stepAt(sA)] ? clamp(yAt(sA) - yAt(b.s), -2.5, 2.5) * 0.5 : 0;
-      tPos.set(b.x * 0.72 + cxB * 0.28, camY + 3.4 + lift, b.z + 6.6 + lift * 0.4);
-      tLook.set(b.x * 0.78 + cxA * 0.22, camY - 0.35 - lift * 0.25 + ahead, b.z - 4.8);
+      // low and close behind the ball, looking far down the course (the ball sits big in the lower half of the picture)
+      tPos.set(b.x * 0.8 + cxB * 0.2, camY + 2.3 + lift, b.z + 4.9 + lift * 0.4);
+      tLook.set(b.x * 0.8 + cxA * 0.2, camY + 0.15 - lift * 0.25 + ahead, b.z - 9);
       if (b.mode === 'arc' && (b.arc.kind === 'pad' || b.arc.kind === 'ramp')) { tLook.z = lerp(tLook.z, -b.arc.s1, 0.35); tLook.y -= 0.4; }
     }
     if (viewOffsetOn && state !== 'menu' && state !== 'shop') applyMenuView(false);
@@ -4999,8 +5081,8 @@ h2 {
     }
     // The terrain pieces planned for a level and age, with their sizes (the same plan genLevel uses).
     function pieces(n, age) {
-      const P = levelParams(n, age), keys = ['type', 'first', 'rails', 'len', 'h', 'd', 'parts', 'k', 'li', 'gaps', 'w', 'zig', 'fol', 'lr', 'g', 'narrowW', 'shift', 'body'];
-      return planFeatures(P, rng(n * 104729 + P.age * 7717 + 3)).map(F => { const o = {}; for (const k of keys) if (F[k] !== undefined && F[k] !== 0 && F[k] !== false) o[k] = typeof F[k] === 'number' ? +F[k].toFixed(2) : F[k]; return o; });
+      const P = levelParams(stageOf(n, age), age), keys = ['type', 'first', 'rails', 'len', 'h', 'd', 'parts', 'k', 'li', 'gaps', 'w', 'zig', 'fol', 'lr', 'g', 'narrowW', 'shift', 'body'];
+      return planFeatures(P, rng(P.n * 104729 + P.age * 7717 + 3)).map(F => { const o = {}; for (const k of keys) if (F[k] !== undefined && F[k] !== 0 && F[k] !== false) o[k] = typeof F[k] === 'number' ? +F[k].toFixed(2) : F[k]; return o; });
     }
     // Every jump in a level: where it lands against its landing zone (metres of deck before and after the touch-down point).
     function landings(n, age) {
